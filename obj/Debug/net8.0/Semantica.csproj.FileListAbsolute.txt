@@ -12,3 +12,4 @@ C:\Users\puppy\OneDrive\Documentos\ITQ\5to\Lenguajes y automatas II\Semantica\ob
 C:\Users\puppy\OneDrive\Documentos\ITQ\5to\Lenguajes y automatas II\Semantica\obj\Debug\net8.0\Semantica.pdb
 C:\Users\puppy\OneDrive\Documentos\ITQ\5to\Lenguajes y automatas II\Semantica\obj\Debug\net8.0\Semantica.genruntimeconfig.cache
 C:\Users\puppy\OneDrive\Documentos\ITQ\5to\Lenguajes y automatas II\Semantica\obj\Debug\net8.0\ref\Semantica.dll
+C:\Users\puppy\OneDrive\Documentos\ITQ\5to\Lenguajes y automatas II\Semantica\obj\Debug\net8.0\Semantica.sourcelink.json

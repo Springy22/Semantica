@@ -76,10 +76,6 @@ namespace Semantica
             match(Tipos.TipoDato);
             ListaIdentificadores(tipo);
             match(";");
-            if (getClasificacion() == Tipos.TipoDato)
-            {
-                Variables();
-            }
         }
 
         private void imprimeVariables()

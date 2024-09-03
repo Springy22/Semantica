@@ -7,7 +7,5 @@ static void Main(string[] args)
 {
     char a, a, b, c, d;
     float pi, e;
-
-    a = 80;
-    int i;
+    a = (int)((3+5)*8-(10-4)/2);
 }

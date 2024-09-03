@@ -15,14 +15,17 @@ namespace Semantica
     public class Lenguaje : Sintaxis
     {
         List<Variable> listaVariables;
+        private Stack<float> S;
         public Lenguaje()
         {
             listaVariables = new List<Variable>();
+            S = new Stack<float>();
         }
 
         public Lenguaje(String nombre) : base(nombre)
         {
             listaVariables = new List<Variable>();
+            S = new Stack<float>();
         }
 
         //Programa  -> Librerias? Variables? Main
@@ -155,10 +158,13 @@ namespace Semantica
         //Asignacion -> Identificador = Expresion;
         private void Asignacion()
         {
+            string variable = getContenido();
             match(Tipos.Identificador);
             match("=");
             Expresion();
             match(Tipos.FinSentencia);
+            imprimeStack();
+            log.WriteLine(variable + " = " + S.Pop());
         }
 
         //If -> if (Condicion) bloqueInstrucciones | instruccion
@@ -333,8 +339,16 @@ namespace Semantica
         {
             if (getClasificacion() == Tipos.OpTermino)
             {
+                string operador = getContenido();
                 match(Tipos.OpTermino);
                 Termino();
+                float R2 = S.Pop();
+                float R1 = S.Pop();
+                switch (operador)
+                {
+                    case "+": S.Push(R1 + R2); break;
+                    case "-": S.Push(R1 - R2); break;
+                }
             }
         }
 
@@ -350,9 +364,28 @@ namespace Semantica
         {
             if (getClasificacion() == Tipos.OpFactor)
             {
+                string operador = getContenido();
                 match(Tipos.OpFactor);
                 Factor();
+                float R2 = S.Pop();
+                float R1 = S.Pop();
+                switch (operador)
+                {
+                    case "*": S.Push(R1 * R2); break;
+                    case "/": S.Push(R1 / R2); break;
+                    case "%": S.Push(R1 % R2); break;
+                }
             }
+        }
+
+        private void imprimeStack()
+        {
+            log.WriteLine("Stack:");
+            foreach (float e in S.Reverse())
+            {
+                log.Write(e + " ");
+            }
+            log.WriteLine();
         }
 
         //Factor -> numero | identificador | (Expresion)
@@ -360,6 +393,7 @@ namespace Semantica
         {
             if (getClasificacion() == Tipos.Numero)
             {
+                S.Push(float.Parse(getContenido()));
                 match(Tipos.Numero);
             }
             else if (getClasificacion() == Tipos.Identificador)
@@ -369,6 +403,12 @@ namespace Semantica
             else
             {
                 match("(");
+                if (getClasificacion() == Tipos.TipoDato)
+                {
+                    match(Tipos.TipoDato);
+                    match(")");
+                    match("(");
+                }
                 Expresion();
                 match(")");
             }

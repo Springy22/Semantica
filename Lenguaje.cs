@@ -167,6 +167,17 @@ namespace Semantica
             log.WriteLine(variable + " = " + S.Pop());
         }
 
+        //POR HACER asignacion -> 
+        //id = expresion ;
+        //id ++ ;
+        //id -- ;
+        //id += expresion ;
+        //id -= expresion ;
+        //id *= expresion ;
+        //id /= expresion ;
+        //id %= expresion ;
+
+
         //If -> if (Condicion) bloqueInstrucciones | instruccion
         //(else bloqueInstrucciones | instruccion)?
         private void If()
@@ -413,5 +424,26 @@ namespace Semantica
                 match(")");
             }
         }
-    }
+
+        private void validacion(){
+            Variable.TipoDato tipo = getTipo(getContenido());
+            switch(tipo){
+                case Variable.TipoDato.Char :{
+                    
+                }break;
+
+                case Variable.TipoDato.Int:{
+
+                }break;
+
+                case Variable.TipoDato.Float:{
+
+                }break;
+            }
+        }
+    } //Fin de la clase Lenguaje
+    
 }
+//Este es mi comentario (Ivan)
+
+ //yo

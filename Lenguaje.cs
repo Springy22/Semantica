@@ -160,22 +160,84 @@ namespace Semantica
         {
             string variable = getContenido();
             match(Tipos.Identificador);
-            match("=");
-            Expresion();
-            match(Tipos.FinSentencia);
-            imprimeStack();
-            log.WriteLine(variable + " = " + S.Pop());
+            switch (getContenido())
+            {
+                case "=":
+                    {
+                        match("=");
+                        Expresion();
+                        match(Tipos.FinSentencia);
+                        imprimeStack();
+                        log.WriteLine(variable + " = " + S.Pop());
+                    }
+                    break;
+                case "++":
+                    {
+                        match("++");
+                        match(Tipos.FinSentencia);
+                        log.WriteLine(variable + "++");
+                    }
+                    break;
+                case "--":
+                    {
+                        match("--");
+                        match(Tipos.FinSentencia);
+                        log.WriteLine(variable + "--");
+                    }
+                    break;
+                case "+=":
+                    {
+                        match("+=");
+                        Expresion();
+                        match(Tipos.FinSentencia);
+                        imprimeStack();
+                        log.WriteLine(variable + " = " + variable + " + " + S.Pop());
+                    }
+                    break;
+                case "-=":
+                    {
+                        match("-=");
+                        Expresion();
+                        match(Tipos.FinSentencia);
+                        imprimeStack();
+                        log.WriteLine(variable + " = " + variable + " - " + S.Pop());
+                    }
+                    break;
+                case "*=":
+                    {
+                        match("*=");
+                        Expresion();
+                        match(Tipos.FinSentencia);
+                        imprimeStack();
+                        log.WriteLine(variable + " = " + variable + " * " + S.Pop());
+                    }
+                    break;
+                case "/=":
+                    {
+                        match("/=");
+                        Expresion();
+                        match(Tipos.FinSentencia);
+                        imprimeStack();
+                        log.WriteLine(variable + " = " + variable + " / " + S.Pop());
+                    }
+                    break;
+                case "%=":
+                    {
+                        match("%=");
+                        Expresion();
+                        match(Tipos.FinSentencia);
+                        imprimeStack();
+                        log.WriteLine(variable + " = " + variable + " % " + S.Pop());
+                    }
+                    break;
+
+            }
+
+
+
         }
 
-        //POR HACER asignacion -> 
-        //id = expresion ;
-        //id ++ ;
-        //id -- ;
-        //id += expresion ;
-        //id -= expresion ;
-        //id *= expresion ;
-        //id /= expresion ;
-        //id %= expresion ;
+        //Hacer un ; general 
 
 
         //If -> if (Condicion) bloqueInstrucciones | instruccion
@@ -425,25 +487,30 @@ namespace Semantica
             }
         }
 
-        private void validacion(){
+        private void Validacion()
+        {
             Variable.TipoDato tipo = getTipo(getContenido());
-            switch(tipo){
-                case Variable.TipoDato.Char :{
-                    
-                }break;
+            switch (tipo)
+            {
+                case Variable.TipoDato.Char:
+                    {
 
-                case Variable.TipoDato.Int:{
+                    }
+                    break;
 
-                }break;
+                case Variable.TipoDato.Int:
+                    {
 
-                case Variable.TipoDato.Float:{
+                    }
+                    break;
 
-                }break;
+                case Variable.TipoDato.Float:
+                    {
+
+                    }
+                    break;
             }
         }
-    } //Fin de la clase Lenguaje
-    
-}
-//Este es mi comentario (Ivan)
+    }
 
- //yo
+}

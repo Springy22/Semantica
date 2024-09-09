@@ -71,10 +71,18 @@ int = TipoDato
 2 = Numero
 ) = Caracter
 ; = FinSentencia
-} = Fin
+a = Identificador
 Stack:
 61 
 a = 61
+++ = IncTermino
+; = FinSentencia
+a = Identificador
+a++
+-- = IncTermino
+; = FinSentencia
+} = Fin
+a--
 ￿ = Caracter
 a (Char) = 0
 a (Char) = 0

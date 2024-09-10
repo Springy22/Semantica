@@ -35,8 +35,6 @@ args = Identificador
 char = TipoDato
 a = Identificador
 , = Caracter
-a = Identificador
-, = Caracter
 b = Identificador
 , = Caracter
 c = Identificador
@@ -72,22 +70,11 @@ int = TipoDato
 ) = Caracter
 ; = FinSentencia
 a = Identificador
-Stack:
-61 
-a = 61
 ++ = IncTermino
 ; = FinSentencia
 a = Identificador
-a++
 -- = IncTermino
 ; = FinSentencia
 } = Fin
-a--
 ￿ = Caracter
-a (Char) = 0
-a (Char) = 0
-b (Char) = 0
-c (Char) = 0
-d (Char) = 0
-pi (Float) = 0
-e (Float) = 0
+77

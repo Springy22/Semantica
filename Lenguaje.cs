@@ -1,4 +1,5 @@
 using System;
+
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -36,7 +37,8 @@ namespace Semantica
                 Librerias();
             }
             Main();
-            imprimeVariables();
+            //imprimeVariables();
+            log.WriteLine(linea12);
         }
 
         //Librerias -> using ListaLibrerias; Librerias?
@@ -158,7 +160,6 @@ namespace Semantica
         //Asignacion -> Identificador = Expresion;
         private void Asignacion()
         {
-            string variable = getContenido();
             match(Tipos.Identificador);
             switch (getContenido())
             {
@@ -167,22 +168,22 @@ namespace Semantica
                         match("=");
                         Expresion();
                         match(Tipos.FinSentencia);
-                        imprimeStack();
-                        log.WriteLine(variable + " = " + S.Pop());
+                        //imprimeStack();
+                        //log.WriteLine(variable + " = " + S.Pop());
                     }
                     break;
                 case "++":
                     {
                         match("++");
                         match(Tipos.FinSentencia);
-                        log.WriteLine(variable + "++");
+                        //log.WriteLine(variable + "++");
                     }
                     break;
                 case "--":
                     {
                         match("--");
                         match(Tipos.FinSentencia);
-                        log.WriteLine(variable + "--");
+                        //log.WriteLine(variable + "--");
                     }
                     break;
                 case "+=":
@@ -190,8 +191,8 @@ namespace Semantica
                         match("+=");
                         Expresion();
                         match(Tipos.FinSentencia);
-                        imprimeStack();
-                        log.WriteLine(variable + " = " + variable + " + " + S.Pop());
+                        //imprimeStack();
+                        //log.WriteLine(variable + " = " + variable + " + " + S.Pop());
                     }
                     break;
                 case "-=":
@@ -199,8 +200,8 @@ namespace Semantica
                         match("-=");
                         Expresion();
                         match(Tipos.FinSentencia);
-                        imprimeStack();
-                        log.WriteLine(variable + " = " + variable + " - " + S.Pop());
+                        //imprimeStack();
+                        //log.WriteLine(variable + " = " + variable + " - " + S.Pop());
                     }
                     break;
                 case "*=":
@@ -208,8 +209,8 @@ namespace Semantica
                         match("*=");
                         Expresion();
                         match(Tipos.FinSentencia);
-                        imprimeStack();
-                        log.WriteLine(variable + " = " + variable + " * " + S.Pop());
+                        //imprimeStack();
+                        //log.WriteLine(variable + " = " + variable + " * " + S.Pop());
                     }
                     break;
                 case "/=":
@@ -217,8 +218,8 @@ namespace Semantica
                         match("/=");
                         Expresion();
                         match(Tipos.FinSentencia);
-                        imprimeStack();
-                        log.WriteLine(variable + " = " + variable + " / " + S.Pop());
+                        //imprimeStack();
+                        //log.WriteLine(variable + " = " + variable + " / " + S.Pop());
                     }
                     break;
                 case "%=":
@@ -226,18 +227,14 @@ namespace Semantica
                         match("%=");
                         Expresion();
                         match(Tipos.FinSentencia);
-                        imprimeStack();
-                        log.WriteLine(variable + " = " + variable + " % " + S.Pop());
+                        //imprimeStack();
+                        //log.WriteLine(variable + " = " + variable + " % " + S.Pop());
                     }
                     break;
-
             }
-
-
-
         }
 
-        //Hacer un ; general 
+        //Hacer un constructor general 
 
 
         //If -> if (Condicion) bloqueInstrucciones | instruccion

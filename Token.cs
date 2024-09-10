@@ -12,7 +12,7 @@ namespace Semantica
             Identificador, Numero, FinSentencia, OpTermino, OpFactor,
             OpLogico, OpRelacional, OpTernario, Asignacion, IncTermino,
             IncFactor, Cadena, Inicio, Fin, Caracter, TipoDato, Ciclo,
-            Condicion
+            Condicion, Validacion, DecTermino
         };
         private string contenido;
         private Tipos clasificacion;

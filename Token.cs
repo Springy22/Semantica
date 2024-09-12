@@ -14,45 +14,55 @@ namespace Semantica
             IncFactor, Cadena, Inicio, Fin, Caracter, TipoDato, Ciclo,
             Condicion, Validacion, DecTermino
         };
+
         private string contenido;
         private Tipos clasificacion;
+
         public Token()
         {
             contenido = "";
         }
-        public void setContenido(string contenido)
+
+        public string Contenido
         {
-            this.contenido = contenido;
+            get => contenido;
+            set => contenido = value;
         }
-        public void setClasificacion(Tipos clasificacion)
+
+        public Tipos Clasificacion
         {
-            this.clasificacion = clasificacion;
+            get => clasificacion;
+            set => clasificacion = value;
         }
-        public string getContenido()
+    }
+
+    public class ExtendedToken : Token
+    {
+        private string contenido;
+
+        // Ocultando la propiedad Contenido de la clase base con 'new'.
+        public new string Contenido
         {
-            return this.contenido;
+            get => contenido;
+            set => contenido = value + " (Extended)";
         }
-        public Tipos getClasificacion()
+    }
+
+    class TestHiding
+    {
+        public static void Test()
         {
-            return this.clasificacion;
+            ExtendedToken et = new ExtendedToken();
+
+            // Propiedad de la clase derivada.
+            et.Contenido = "Valor Derivado";
+
+            // Propiedad de la clase base.
+            ((Token)et).Contenido = "Valor Base";
+
+            Console.WriteLine("Contenido en la clase derivada: {0}", et.Contenido);
+            Console.WriteLine("Contenido en la clase base: {0}", ((Token)et).Contenido);
         }
     }
 }
 
-
-/*
-public class Token
-    private string _Contenido;
-    public string contenido;
-    {
-        get => _name;
-        set => _name = value;
-    }
-
-
-*/
-
-/*public sring clasificacion {
-        set->
-        get->
-}*/

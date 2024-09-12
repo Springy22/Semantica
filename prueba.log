@@ -73,9 +73,12 @@ a = Identificador
 ++ = IncTermino
 ; = FinSentencia
 a = Identificador
+-- = IncTermino
+; = FinSentencia
+a = Identificador
 += = IncTermino
 3 = Numero
 ; = FinSentencia
 } = Fin
 ￿ = Caracter
-13
+14

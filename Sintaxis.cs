@@ -17,7 +17,7 @@ namespace Semantica
         }
         public void match(string espera)
         {
-            if (getContenido() == espera)
+            if (Contenido == espera)
             {
                 nextToken();
             }
@@ -31,12 +31,12 @@ namespace Semantica
                     linea12 = linea12 + (-diferencia);
                 }
                 log.WriteLine(linea12);
-                throw new Error("Sintaxis: se espera un " + espera + " (" + getContenido() + ")" + " en la linea: " + linea12, log);
+                throw new Error("Sintaxis: se espera un " + espera + " (" + Contenido + ")" + " en la linea: " + linea12, log);
             }
         }
         public void match(Tipos espera)
         {
-            if (getClasificacion() == espera)
+            if (Clasificacion == espera)
             {
                 nextToken();
             }
@@ -50,7 +50,7 @@ namespace Semantica
                     linea12 = linea12 + (-diferencia);
                 }
                 log.WriteLine(linea12);
-                throw new Error("Sintaxis: se espera un " + espera + " (" + getContenido() + ")" + " en la linea: " + linea12, log);
+                throw new Error("Sintaxis: se espera un " + espera + " (" + Contenido + ")" + " en la linea: " + linea12, log);
             }
         }
     }

@@ -9,5 +9,6 @@ static void Main(string[] args)
     float pi, e;
     a = (int)((3+5)*8-(10-4)/2);
     a++;
+    a--;
     a+=3;
 }

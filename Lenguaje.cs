@@ -7,7 +7,7 @@ using Semantica;
 
 /*
     1. Colocar el numero de linea en errores lexicos y sintaxis
-    2. Cambiar la clase token para atributos publicos (get,set)
+    2. Cambiar la clase token para atributos privados (get,set)
     3. Cambiar los constructores de la clase lexico usando parámetros por default
 */
 
@@ -38,6 +38,12 @@ namespace Semantica
             }
             Main();
             //imprimeVariables();
+            linea12=linea12-10;
+            int diferencia;
+            if((linea12-13)!=0){
+                diferencia=(linea12-13)/2;
+                linea12=linea12+(-diferencia);
+            }
             log.WriteLine(linea12);
         }
 
@@ -484,24 +490,24 @@ namespace Semantica
             }
         }
 
-        private void Validacion()
+        private void Validacion(Token variable)
         {
-            Variable.TipoDato tipo = getTipo(getContenido());
-            switch (tipo)
+            //string contenido = getContenido();
+            switch (variable.getContenido())
             {
-                case Variable.TipoDato.Char:
+                case "char":
                     {
 
                     }
                     break;
 
-                case Variable.TipoDato.Int:
+                case "int":
                     {
 
                     }
                     break;
 
-                case Variable.TipoDato.Float:
+                case "float":
                     {
 
                     }

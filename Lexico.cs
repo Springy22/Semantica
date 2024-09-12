@@ -8,7 +8,7 @@ namespace Semantica
 {
     public class Lexico : Token, IDisposable
     {
-        public int linea12=0;
+        public int linea12 = 0;
         private StreamReader archivo;
         public StreamWriter log;
         protected StreamWriter asm;
@@ -210,7 +210,6 @@ namespace Semantica
                 case 09:
                 case 10: setClasificacion(Tipos.OpTermino); break;
                 case 11: setClasificacion(Tipos.IncTermino); break;
-                case 12: setClasificacion(Tipos.DecTermino); break;
                 case 27:
                 case 12: setClasificacion(Tipos.OpFactor); break;
                 case 13: setClasificacion(Tipos.IncFactor); break;
@@ -253,8 +252,11 @@ namespace Semantica
                     }
                     archivo.Read();
                 }
+                if (c == '\n')
+                {
+                    linea12++;
+                }
             }
-            linea12++;
             if (Estado == E)
             {
                 if (getClasificacion() == Tipos.Numero)

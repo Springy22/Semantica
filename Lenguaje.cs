@@ -240,9 +240,6 @@ namespace Semantica
             }
         }
 
-        //Hacer un constructor general 
-
-
         //If -> if (Condicion) bloqueInstrucciones | instruccion
         //(else bloqueInstrucciones | instruccion)?
         private void If()
@@ -492,24 +489,51 @@ namespace Semantica
 
         private void Validacion(Token variable)
         {
-            //string contenido = getContenido();
+            string contenido = getContenido();
             switch (variable.getContenido())
             {
                 case "char":
                     {
-
+                        if (contenido.Length == 1)
+                        {
+                            log.WriteLine("Es un char valido " + contenido);
+                        }else{
+                            log.WriteLine("Error: No es un char valido " + contenido);
+                        }
                     }
                     break;
 
                 case "int":
                     {
-
+                        int numero;
+                        if (int.TryParse(contenido, out numero))
+                        {
+                            if (numero >= int.MinValue && numero <= int.MaxValue)
+                            {
+                                log.WriteLine("Es un int valido y " + contenido + " esta dentro de rango");
+                            }else{
+                            log.WriteLine("Error: No es un int valido y " + contenido + " esta fuera de rango");
+                            }
+                        }else{
+                            log.WriteLine("Error: No es un int valido");
+                        }
                     }
                     break;
 
                 case "float":
                     {
-
+                        float numero;
+                        if (float.TryParse(contenido, out numero))
+                        {
+                            if (numero >= float.MinValue && numero <= float.MaxValue)
+                            {
+                                log.WriteLine("Es un float valido y " + contenido + " esta dentro de rango");
+                            }else{
+                            log.WriteLine("Error: No es un float valido y " + contenido + " esta fuera de rango");
+                            }
+                        }else{
+                            log.WriteLine("Error: No es un float valido");
+                        }
                     }
                     break;
             }

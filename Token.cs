@@ -38,3 +38,21 @@ namespace Semantica
         }
     }
 }
+
+
+/*
+public class Token
+    private string _Contenido;
+    public string contenido;
+    {
+        get => _name;
+        set => _name = value;
+    }
+
+
+*/
+
+/*public sring clasificacion {
+        set->
+        get->
+}*/

@@ -52,7 +52,7 @@ namespace Semantica
             {F,F, 32, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F}
 
         };
-        public Lexico() // Constructor
+        /*public Lexico() // Constructor
         {
             linea = 0;
             log = new StreamWriter("prueba.log");
@@ -69,7 +69,8 @@ namespace Semantica
             }
             archivo = new StreamReader("Prueba.cpp");
         }
-        public Lexico(string nombre) // Constructor
+        */
+        public Lexico(string nombre = "prueba.cpp") // Constructor
         {
             linea = 0;
             log = new StreamWriter(Path.GetFileNameWithoutExtension(nombre) + ".log");
@@ -204,27 +205,27 @@ namespace Semantica
         {
             switch (Estado)
             {
-                case 01: Clasificacion=Tipos.Identificador; break;
-                case 02: Clasificacion=Tipos.Numero; break;
-                case 08: Clasificacion=Tipos.FinSentencia; break;
+                case 01: Clasificacion = Tipos.Identificador; break;
+                case 02: Clasificacion = Tipos.Numero; break;
+                case 08: Clasificacion = Tipos.FinSentencia; break;
                 case 09:
-                case 10: Clasificacion=Tipos.OpTermino; break;
-                case 11: Clasificacion=Tipos.IncTermino; break;
+                case 10: Clasificacion = Tipos.OpTermino; break;
+                case 11: Clasificacion = Tipos.IncTermino; break;
                 case 27:
-                case 12: Clasificacion=Tipos.OpFactor; break;
-                case 13: Clasificacion=Tipos.IncFactor; break;
+                case 12: Clasificacion = Tipos.OpFactor; break;
+                case 13: Clasificacion = Tipos.IncFactor; break;
                 case 14:
-                case 15: Clasificacion=(Tipos.Caracter); break;
-                case 16: Clasificacion=(Tipos.OpLogico); break;
-                case 17: Clasificacion=(Tipos.OpRelacional); break;
-                case 18: Clasificacion=(Tipos.Asignacion); break;
-                case 19: Clasificacion=(Tipos.OpLogico); break;
-                case 20: Clasificacion=(Tipos.OpRelacional); break;
-                case 21: Clasificacion=(Tipos.OpTernario); break;
-                case 22: Clasificacion=(Tipos.Cadena); break;
-                case 24: Clasificacion=(Tipos.Inicio); break;
-                case 25: Clasificacion=(Tipos.Fin); break;
-                case 26: Clasificacion=(Tipos.Caracter); break;
+                case 15: Clasificacion = (Tipos.Caracter); break;
+                case 16: Clasificacion = (Tipos.OpLogico); break;
+                case 17: Clasificacion = (Tipos.OpRelacional); break;
+                case 18: Clasificacion = (Tipos.Asignacion); break;
+                case 19: Clasificacion = (Tipos.OpLogico); break;
+                case 20: Clasificacion = (Tipos.OpRelacional); break;
+                case 21: Clasificacion = (Tipos.OpTernario); break;
+                case 22: Clasificacion = (Tipos.Cadena); break;
+                case 24: Clasificacion = (Tipos.Inicio); break;
+                case 25: Clasificacion = (Tipos.Fin); break;
+                case 26: Clasificacion = (Tipos.Caracter); break;
 
             }
         }
@@ -261,31 +262,31 @@ namespace Semantica
             {
                 if (Clasificacion == Tipos.Numero)
                 {
-                    throw new Error(" Se espera un digito " + buffer, log);
+                    throw new Error(" Se espera un digito " + buffer, log, linea12);
                 }
                 else if (Clasificacion == Tipos.Cadena)
                 {
-                    throw new Error(" Se espera cierre de cadena " + buffer, log);
+                    throw new Error(" Se espera cierre de cadena " + buffer, log, linea12);
                 }
                 else if (Clasificacion == Tipos.OpFactor)
                 {
-                    throw new Error(" Se espera un cierre de comentario\n " + buffer, log);
+                    throw new Error(" Se espera un cierre de comentario\n " + buffer, log,linea12);
                 }
             }
-            Contenido=buffer;
+            Contenido = buffer;
             if (Clasificacion == Tipos.Identificador)
             {
                 switch (Contenido)
                 {
                     case "char":
                     case "int":
-                    case "float": Clasificacion=Tipos.TipoDato; break;
+                    case "float": Clasificacion = Tipos.TipoDato; break;
                     case "if":
                     case "else":
-                    case "switch": Clasificacion=(Tipos.Condicion); break;
+                    case "switch": Clasificacion = (Tipos.Condicion); break;
                     case "while":
                     case "do":
-                    case "for": Clasificacion=(Tipos.Ciclo); break;
+                    case "for": Clasificacion = (Tipos.Ciclo); break;
                 }
             }
             log.WriteLine(Contenido + " = " + Clasificacion);

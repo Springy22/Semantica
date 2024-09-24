@@ -5,8 +5,6 @@ using System.Threading.Tasks;
 
 static void Main(string[] args)
 {
-    char a, b, c, d;
-    float pi, e;
-    a = (int)((3+5)*8-(10-4)/2);
-    a=4000000000000000000000;
+    char a;
+    a=(char)(258);
 }

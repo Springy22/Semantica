@@ -1,6 +1,7 @@
 Analizador Lexico
 Autor: Rafael Mejía
 using = Identificador
+Analizador Sintactico
 System = Identificador
 ; = FinSentencia
 using = Identificador
@@ -34,45 +35,14 @@ args = Identificador
 { = Inicio
 char = TipoDato
 a = Identificador
-, = Caracter
-b = Identificador
-, = Caracter
-c = Identificador
-, = Caracter
-d = Identificador
-; = FinSentencia
-float = TipoDato
-pi = Identificador
-, = Caracter
-e = Identificador
 ; = FinSentencia
 a = Identificador
 = = Asignacion
-( = Caracter
-int = TipoDato
-) = Caracter
-( = Caracter
-( = Caracter
-3 = Numero
-+ = OpTermino
-5 = Numero
-) = Caracter
-* = OpFactor
-8 = Numero
-- = OpTermino
-( = Caracter
-10 = Numero
-- = OpTermino
-4 = Numero
-) = Caracter
-/ = OpFactor
-2 = Numero
-) = Caracter
+255 = Numero
 ; = FinSentencia
 a = Identificador
-= = Asignacion
-4000000000000000000000 = Numero
+a=255
+++ = IncTermino
 ; = FinSentencia
-} = Fin
-￿ = Caracter
-12
+a = Identificador
+Error:  Semantico: No puedo asignar un Int a un Char en la linea 0

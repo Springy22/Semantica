@@ -23,15 +23,7 @@ namespace Semantica
             }
             else
             {
-                linea12 = linea12 - 10;
-                int diferencia;
-                if ((linea12 - 13) != 0)
-                {
-                    diferencia = (linea12 - 13) / 2;
-                    linea12 = linea12 + (-diferencia);
-                }
-                log.WriteLine(linea12);
-                throw new Error("Sintaxis: se espera un " + espera + " (" + Contenido + ")" + " en la linea: " + linea12, log);
+                throw new Error("Sintaxis: se espera un " + espera + " (" + Contenido + ")" + " en la linea: " + contadorLinea(), log);
             }
         }
         public void match(Tipos espera)
@@ -42,16 +34,19 @@ namespace Semantica
             }
             else
             {
-                linea12 = linea12 - 10;
-                int diferencia;
-                if ((linea12 - 13) != 0)
-                {
-                    diferencia = (linea12 - 13) / 2;
-                    linea12 = linea12 + (-diferencia);
-                }
-                log.WriteLine(linea12);
-                throw new Error("Sintaxis: se espera un " + espera + " (" + Contenido + ")" + " en la linea: " + linea12, log);
+                throw new Error("Sintaxis: se espera un " + espera + " (" + Contenido + ")" + " en la linea: " + contadorLinea(), log);
             }
+        }
+
+        private int contadorLinea(){
+            int laine = new Lexico().linea12;
+            laine=laine-10;
+            int diferencia;
+            if((laine-13)!=0){
+                diferencia=(laine-13)/2;
+                laine=laine+(-diferencia);
+            }
+            return laine;
         }
     }
 }

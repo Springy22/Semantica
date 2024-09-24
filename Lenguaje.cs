@@ -6,9 +6,19 @@ using System.Threading.Tasks;
 using Semantica;
 
 /*
-    1. Colocar el numero de linea en errores lexicos y sintaxis
-    2. Cambiar la clase token para atributos privados (get,set)
-    3. Cambiar los constructores de la clase lexico usando parámetros por default
+    1. Usar metodo find en lugar del for each
+    2. Validar que no existam variables duplicadas
+    3. Validar que existan las variables en las expresiones matematicas
+       Asignación
+    4. char + char = char
+       int + int = int
+    5. Meter el valor de la variable al stack
+    6. Asignar una expresión matematica a la variable al momento de declararla
+    7. Emular el if
+    8. Validar que en el ReadLine se capturen solo números e implementar una excepción
+    9. Emular el do
+    10. Emular el for
+    11. Emular el while
 */
 
 namespace Semantica
@@ -19,12 +29,14 @@ namespace Semantica
         private Stack<float> S;
         public Lenguaje()
         {
+            log.WriteLine("Analizador Sintactico");
             listaVariables = new List<Variable>();
             S = new Stack<float>();
         }
 
         public Lenguaje(String nombre) : base(nombre)
         {
+            log.WriteLine("Analizador Sintactico");
             listaVariables = new List<Variable>();
             S = new Stack<float>();
         }
@@ -37,14 +49,7 @@ namespace Semantica
                 Librerias();
             }
             Main();
-            //imprimeVariables();
-            linea12=linea12-10;
-            int diferencia;
-            if((linea12-13)!=0){
-                diferencia=(linea12-13)/2;
-                linea12=linea12+(-diferencia);
-            }
-            log.WriteLine(linea12);
+            //imprimeVariables();            
         }
 
         //Librerias -> using ListaLibrerias; Librerias?
@@ -91,6 +96,7 @@ namespace Semantica
 
         private void imprimeVariables()
         {
+            log.WriteLine("Lista de variables");
             foreach (Variable v in listaVariables)
             {
                 log.WriteLine(v.getNombre() + " (" + v.getTipo() + ") = " + v.getValor());
@@ -135,7 +141,7 @@ namespace Semantica
         {
             if (Contenido == "Console")
             {
-                Console();
+                console();
             }
             else if (Contenido == "if")
             {
@@ -166,7 +172,10 @@ namespace Semantica
         //Asignacion -> Identificador = Expresion;
         private void Asignacion()
         {
+            string variable = Contenido;
             match(Tipos.Identificador);
+            var v = listaVariables.Find(delegate (Variable x) { return x.getNombre() == variable; });
+            float nuevoValor = v.getValor();
             switch (Contenido)
             {
                 case "=":
@@ -174,17 +183,40 @@ namespace Semantica
                         Token var = new Token();
                         var.Contenido = Contenido;
                         match("=");
-                        Expresion();
-                        Validacion(var);
-                        match(Tipos.FinSentencia);
-                        //imprimeStack();
-                        //log.WriteLine(variable + " = " + S.Pop());
+                        if (Contenido == "Console")
+                        {
+                            match("Console");
+                            match(".");
+                            if (Contenido == "Read")
+                            {
+                                match("Read");
+                                float valor = Console.Read();
+                            }
+                            else
+                            {
+                                match("ReadLine");
+                                float valor = float.Parse("" + Console.ReadLine());
+                                // 8
+                            }
+                        }
+                        else
+                        {
+                            Expresion();
+                            Validacion(var);
+                            match(Tipos.FinSentencia);
+                            nuevoValor = S.Pop();
+                            //imprimeStack();
+                            //log.WriteLine(variable + " = " + S.Pop());
+                        }
+
                     }
                     break;
                 case "++":
                     {
                         match("++");
                         match(Tipos.FinSentencia);
+                        nuevoValor++;
+
                         //log.WriteLine(variable + "++");
                     }
                     break;
@@ -192,6 +224,7 @@ namespace Semantica
                     {
                         match("--");
                         match(Tipos.FinSentencia);
+                        nuevoValor--;
                         //log.WriteLine(variable + "--");
                     }
                     break;
@@ -200,6 +233,7 @@ namespace Semantica
                         match("+=");
                         Expresion();
                         match(Tipos.FinSentencia);
+                        nuevoValor += S.Pop();
                         //imprimeStack();
                         //log.WriteLine(variable + " = " + variable + " + " + S.Pop());
                     }
@@ -209,6 +243,7 @@ namespace Semantica
                         match("-=");
                         Expresion();
                         match(Tipos.FinSentencia);
+                        nuevoValor -= S.Pop();
                         //imprimeStack();
                         //log.WriteLine(variable + " = " + variable + " - " + S.Pop());
                     }
@@ -218,6 +253,7 @@ namespace Semantica
                         match("*=");
                         Expresion();
                         match(Tipos.FinSentencia);
+                        nuevoValor *= S.Pop();
                         //imprimeStack();
                         //log.WriteLine(variable + " = " + variable + " * " + S.Pop());
                     }
@@ -227,6 +263,7 @@ namespace Semantica
                         match("/=");
                         Expresion();
                         match(Tipos.FinSentencia);
+                        nuevoValor /= S.Pop();
                         //imprimeStack();
                         //log.WriteLine(variable + " = " + variable + " / " + S.Pop());
                     }
@@ -236,11 +273,72 @@ namespace Semantica
                         match("%=");
                         Expresion();
                         match(Tipos.FinSentencia);
+                        nuevoValor %= S.Pop();
                         //imprimeStack();
                         //log.WriteLine(variable + " = " + variable + " % " + S.Pop());
                     }
                     break;
             }
+            if (analisisSemantico(v, nuevoValor))
+            {
+                v.setValor(nuevoValor);
+            }
+            else
+            {
+                throw new Error(" Semantico: No puedo asignar un " + valorToTipo(nuevoValor) + " a un " + v.getTipo(), log, linea);
+            }
+            log.WriteLine(variable + "=" + nuevoValor);
+            /*if(nuevoValor > rangoTipoDato()){
+                throw new Error("Semantico: ",log,linea12);
+            }*/
+        }
+
+        private Variable.TipoDato valorToTipo(float valor)
+        {
+            if (valor % 1 != 0)
+            {
+                return Variable.TipoDato.Float;
+            }
+            else if (valor <= 255)
+            {
+                return Variable.TipoDato.Char;
+            }
+            else if (valor <= 65535)
+            {
+                return Variable.TipoDato.Int;
+            }
+            return Variable.TipoDato.Float;
+        }
+
+        bool analisisSemantico(Variable v, float valor)
+        {
+            if (valor % 1 == 0)
+            {
+                if (v.getTipo() == Variable.TipoDato.Char)
+                {
+                    if (valor <= 255)
+                    {
+                        return true;
+                    }
+                    return false;
+                }
+                else if (v.getTipo() == Variable.TipoDato.Int)
+                {
+                    if (valor <= 65535)
+                    {
+                        return true;
+                    }
+                    return false;
+                }
+            }
+            else
+            {
+                if (v.getTipo() == Variable.TipoDato.Char || v.getTipo() == Variable.TipoDato.Int)
+                {
+                    return false;
+                }
+            }
+            return true;
         }
 
         //If -> if (Condicion) bloqueInstrucciones | instruccion
@@ -356,32 +454,33 @@ namespace Semantica
         }
 
         //Console -> Console.(WriteLine|Write) (cadena?); |
-        //Console.(Read | ReadLine) ();
-        private void Console()
+        private void console()
         {
             match("Console");
             match(".");
-            if (Contenido == "WriteLine" || Contenido == "Write")
+            if (Contenido == "WriteLine")
             {
-                match(Contenido);
+                match("WriteLine");
+                match("(");
+                if (Clasificacion == Tipos.Cadena)
+                {
+                    match(Tipos.Cadena);
+                    if(Contenido == "+"){
+                        listaConcatenacion();
+                    }
+                }
+                else{
+
+                }
+                match(")");
+            }
+            else{
+                match("Write");
                 match("(");
                 if (Clasificacion == Tipos.Cadena)
                 {
                     match(Tipos.Cadena);
                 }
-                match(")");
-            }
-            else
-            {
-                if (Contenido == "ReadLine")
-                {
-                    match("ReadLine");
-                }
-                else
-                {
-                    match("Read");
-                }
-                match("(");
                 match(")");
             }
             match(";");
@@ -474,19 +573,42 @@ namespace Semantica
             }
             else if (Clasificacion == Tipos.Identificador)
             {
+                //5.
                 match(Tipos.Identificador);
             }
             else
             {
+                bool huboCast = false;
+                Variable.TipoDato aCastear = Variable.TipoDato.Char;
                 match("(");
                 if (Clasificacion == Tipos.TipoDato)
                 {
+                    huboCast = true;
+                    aCastear = getTipo(Contenido);
                     match(Tipos.TipoDato);
                     match(")");
                     match("(");
+                    //12
+                    //Sacar un elemento del stack
+                    //Castearlo
+                    //Meterlo casteado
                 }
                 Expresion();
                 match(")");
+                if (huboCast && aCastear != Variable.TipoDato.Float)
+                {
+                    float valor = S.Pop();
+                    //Castearlo
+                    if (aCastear == Variable.TipoDato.Char)
+                    {
+                        valor %= 256;
+                    }
+                    else
+                    {
+                        valor %= 65536;
+                    }
+                    S.Push(valor);
+                }
             }
         }
 
@@ -500,7 +622,9 @@ namespace Semantica
                         if (contenido.Length == 1)
                         {
                             log.WriteLine("Es un char valido " + contenido);
-                        }else{
+                        }
+                        else
+                        {
                             log.WriteLine("Error: No es un char valido " + contenido);
                         }
                     }
@@ -514,10 +638,14 @@ namespace Semantica
                             if (numero >= int.MinValue && numero <= int.MaxValue)
                             {
                                 log.WriteLine("Es un int valido y " + contenido + " esta dentro de rango");
-                            }else{
-                            log.WriteLine("Error: No es un int valido y " + contenido + " esta fuera de rango");
                             }
-                        }else{
+                            else
+                            {
+                                log.WriteLine("Error: No es un int valido y " + contenido + " esta fuera de rango");
+                            }
+                        }
+                        else
+                        {
                             log.WriteLine("Error: No es un int valido");
                         }
                     }
@@ -531,16 +659,32 @@ namespace Semantica
                             if (numero >= float.MinValue && numero <= float.MaxValue)
                             {
                                 log.WriteLine("Es un float valido y " + contenido + " esta dentro de rango");
-                            }else{
-                            log.WriteLine("Error: No es un float valido y " + contenido + " esta fuera de rango");
                             }
-                        }else{
+                            else
+                            {
+                                log.WriteLine("Error: No es un float valido y " + contenido + " esta fuera de rango");
+                            }
+                        }
+                        else
+                        {
                             log.WriteLine("Error: No es un float valido");
                         }
                     }
                     break;
             }
         }
+
+        /*public int contadorLinea(){
+            linea12=linea12-10;
+            int diferencia;
+            if((linea12-13)!=0){
+                diferencia=(linea12-13)/2;
+                linea12=linea12+(-diferencia);
+            }
+            log.WriteLine(linea12);
+            return linea12;
+        }
+        */
     }
 
 }

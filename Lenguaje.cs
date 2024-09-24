@@ -171,8 +171,11 @@ namespace Semantica
             {
                 case "=":
                     {
+                        Token var = new Token();
+                        var.Contenido = Contenido;
                         match("=");
                         Expresion();
+                        Validacion(var);
                         match(Tipos.FinSentencia);
                         //imprimeStack();
                         //log.WriteLine(variable + " = " + S.Pop());

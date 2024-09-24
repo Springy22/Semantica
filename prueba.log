@@ -70,15 +70,9 @@ int = TipoDato
 ) = Caracter
 ; = FinSentencia
 a = Identificador
-++ = IncTermino
-; = FinSentencia
-a = Identificador
--- = IncTermino
-; = FinSentencia
-a = Identificador
-+= = IncTermino
-3 = Numero
+= = Asignacion
+4000000000000000000000 = Numero
 ; = FinSentencia
 } = Fin
 ￿ = Caracter
-14
+12

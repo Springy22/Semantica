@@ -16,9 +16,10 @@ using Semantica;
     6. Asignar una expresión matematica a la variable al momento de declararla
     7. Emular el if
     8. Validar que en el ReadLine se capturen solo números e implementar una excepción
-    9. Emular el do
-    10. Emular el for
-    11. Emular el while
+    9. Desarrollar lista de concatenaciones
+    10. Emular el do
+    11. Emular el for
+    12. Emular el while
 */
 
 namespace Semantica
@@ -465,26 +466,44 @@ namespace Semantica
                 if (Clasificacion == Tipos.Cadena)
                 {
                     match(Tipos.Cadena);
-                    if(Contenido == "+"){
+                    if (Contenido == "+")
+                    {
                         listaConcatenacion();
                     }
                 }
-                else{
+                else
+                {
 
                 }
                 match(")");
             }
-            else{
+            else
+            {
                 match("Write");
                 match("(");
                 if (Clasificacion == Tipos.Cadena)
                 {
                     match(Tipos.Cadena);
+                    if (Contenido == "+")
+                    {
+                        listaConcatenacion();
+                    }
                 }
                 match(")");
             }
             match(";");
 
+        }
+
+        string listaConcatenacion()
+        {
+            match("+");
+            match(Tipos.Identificador);
+            if (Contenido == "+")
+            {
+                listaConcatenacion();
+            }
+            return "";
         }
 
         //Main      -> static void Main(string[] args) BloqueInstrucciones 

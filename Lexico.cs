@@ -9,10 +9,10 @@ namespace Semantica
     public class Lexico : Token, IDisposable
     {
         public int linea12 = 0;
-        private StreamReader archivo;
+        protected StreamReader archivo;
         public StreamWriter log;
         protected StreamWriter asm;
-        protected int linea;
+        protected int linea, caracter;
         const int F = -1;
         const int E = -2;
         int[,] TRAND =
@@ -72,7 +72,7 @@ namespace Semantica
         */
         public Lexico(string nombre = "prueba.cpp") // Constructor
         {
-            linea = 0;
+            linea = caracter = 1;
             log = new StreamWriter(Path.GetFileNameWithoutExtension(nombre) + ".log");
             log.AutoFlush = true;
             asm = new StreamWriter(Path.GetFileNameWithoutExtension(nombre) + ".asm");
@@ -251,6 +251,7 @@ namespace Semantica
                     {
                         buffer += c;
                     }
+                    caracter++;
                     archivo.Read();
                 }
                 if (c == '\n')

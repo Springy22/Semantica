@@ -36,7 +36,20 @@ namespace Semantica
         }
     }
 
-    public class ExtendedToken : Token
+    class TestHiding
+    {
+        public static void Test()
+        {
+            Token t = new Token();
+
+            // Asignando y mostrando la propiedad de la clase base.
+            t.Contenido = "Valor Base";
+
+            Console.WriteLine("Contenido en la clase base: {0}", t.Contenido);
+        }
+    }
+}
+    /*public class ExtendedToken : Token
     {
         private string contenido;
 
@@ -64,5 +77,4 @@ namespace Semantica
             Console.WriteLine("Contenido en la clase base: {0}", ((Token)et).Contenido);
         }
     }
-}
-
+}*/

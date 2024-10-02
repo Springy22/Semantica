@@ -33,16 +33,13 @@ string = Identificador
 args = Identificador
 ) = Caracter
 { = Inicio
+int = TipoDato
+altura = Identificador
+, = Caracter
+i = Identificador
+, = Caracter
+j = Identificador
+; = FinSentencia
 char = TipoDato
-a = Identificador
-; = FinSentencia
-a = Identificador
+x = Identificador
 = = Asignacion
-255 = Numero
-; = FinSentencia
-a = Identificador
-a=255
-++ = IncTermino
-; = FinSentencia
-a = Identificador
-Error:  Semantico: No puedo asignar un Int a un Char en la linea 0

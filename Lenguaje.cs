@@ -11,7 +11,7 @@ using Semantica;
        Asignación
     4. Asignar una expresion matematica a la variable al momento de declararla
     verificando la semantica
-    5. Validar que en el ReadLine se capturen solo números e implementar una excepción
+    5. *   Validar que en el ReadLine se capturen solo números e implementar una excepción
     6. listaConcatenacion: 30, 40, 50, 12, 0
     7. Quiter comillas y considerar el write
     8. Emular el for   --- 15 pts
@@ -215,12 +215,23 @@ namespace Semantica
                     else
                     {
                         match("ReadLine");
+                        if(!float.TryParse (Console.ReadLine(), out nuevoValor))
+                        {
+                            throw new Error("Error: capture solo numeros", log, linea);
+                        }
+                    }
+                    match("(");
+                    match(")");
+                    }
+                    /*else
+                    {
+                        match("ReadLine");
                         nuevoValor = float.Parse("" + Console.ReadLine());
                         // 8
                     }
                     match("(");
                     match(")");
-                }
+                }*/
                 else
                 {
                     Expresion();
@@ -313,7 +324,7 @@ namespace Semantica
                     {
                         return true;
                     }
-                    return false;
+                    //return false;
                 }
                 else if (v.getTipo() == Variable.TipoDato.Int)
                 {
@@ -638,7 +649,7 @@ namespace Semantica
             }
         }
 
-        private void Validacion(Token variable)
+        /*private void Validacion(Token variable)
         {
             string contenido = Contenido;
             switch (variable.Contenido)
@@ -699,7 +710,7 @@ namespace Semantica
                     break;
             }
         }
-
+        */
         /*public int contadorLinea(){
             linea12=linea12-10;
             int diferencia;

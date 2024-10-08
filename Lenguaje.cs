@@ -11,7 +11,7 @@ using Semantica;
        Asignación
     4. Asignar una expresion matematica a la variable al momento de declararla
     verificando la semantica
-    5. *   Validar que en el ReadLine se capturen solo números e implementar una excepción
+    5. Validar que en el ReadLine se capturen solo números e implementar una excepción
     6. listaConcatenacion: 30, 40, 50, 12, 0
     7. Quiter comillas y considerar el write
     8. Emular el for   --- 15 pts
@@ -28,6 +28,8 @@ namespace Semantica
     {
         List<Variable> listaVariables;
         private Stack<float> S;
+        private float nuevoValor;
+        private string operadorCondicion;
         private Variable.TipoDato tipoDatoExpresion;
         public Lenguaje()
         {
@@ -51,7 +53,7 @@ namespace Semantica
                 Librerias();
             }
             Main();
-            //imprimeVariables();            
+            imprimeVariables();
         }
 
         //Librerias -> using ListaLibrerias; Librerias?
@@ -99,11 +101,21 @@ namespace Semantica
         private void imprimeVariables()
         {
             log.WriteLine("Lista de variables");
-            for(int i = 0; i < listaVariables.Count; i++)
+            for (int i = 0; i < listaVariables.Count; i++)
             {
                 Variable v = listaVariables[i];
                 log.WriteLine(v.getNombre() + " " + v.getTipo() + " " + v.getValor());
             }
+        }
+
+        private Variable BuscarVariable(string nombreVariable)
+        {
+            var v = listaVariables.Find(v => v.getNombre() == nombreVariable);
+            if (v == null)
+            {
+                throw new Error("Semantico, la variable " + nombreVariable + " no existe", log, linea);
+            }
+            return v;
         }
 
         //ListaIdentificadores -> identificador (,ListaIdentificadores)?
@@ -119,6 +131,11 @@ namespace Semantica
                 listaVariables.Add(new Variable(Contenido, t));
             }
             match(Tipos.Identificador);
+            if (Contenido == "=")
+            {
+                match("=");
+                Expresion(); // Procesar la expresión de asignación
+            }
             if (Contenido == ",")
             {
                 match(",");
@@ -187,11 +204,8 @@ namespace Semantica
             string variable = Contenido;
             match(Tipos.Identificador);
 
-            var v = listaVariables.Find(delegate (Variable x) { return x.getNombre() == variable; });
-            if (v == null)
-            {
-                throw new Error("Semantico, la variable " + variable + " no existe", log, linea);
-            }
+            var v = BuscarVariable(variable);
+
             float nuevoValor = v.getValor();
 
             tipoDatoExpresion = Variable.TipoDato.Char;
@@ -215,23 +229,18 @@ namespace Semantica
                     else
                     {
                         match("ReadLine");
-                        if(!float.TryParse (Console.ReadLine(), out nuevoValor))
+                        try
                         {
-                            throw new Error("Error: capture solo numeros", log, linea);
+                            nuevoValor = float.Parse(Console.ReadLine());  // Intentamos convertir el valor a float
+                        }
+                        catch (FormatException)
+                        {
+                            throw new Error("Error: Solo se permiten números", log, linea);  // Lanza una excepción si el valor no es numérico
                         }
                     }
                     match("(");
                     match(")");
-                    }
-                    /*else
-                    {
-                        match("ReadLine");
-                        nuevoValor = float.Parse("" + Console.ReadLine());
-                        // 8
-                    }
-                    match("(");
-                    match(")");
-                }*/
+                }
                 else
                 {
                     Expresion();
@@ -240,11 +249,13 @@ namespace Semantica
             }
             else if (Contenido == "++")
             {
+                operadorCondicion = Contenido;
                 match("++");
                 nuevoValor++;
             }
             else if (Contenido == "--")
             {
+                operadorCondicion = Contenido;
                 match("--");
                 nuevoValor--;
             }
@@ -324,7 +335,7 @@ namespace Semantica
                     {
                         return true;
                     }
-                    //return false;
+                    return false;
                 }
                 else if (v.getTipo() == Variable.TipoDato.Int)
                 {
@@ -355,7 +366,7 @@ namespace Semantica
             match(")");
             if (Contenido == "{")
             {
-                BloqueInstrucciones(resultado);
+                BloqueInstrucciones(resultado && ejecutar);
             }
             else
             {
@@ -380,11 +391,12 @@ namespace Semantica
         {
             Expresion(); //E1
             string operador = Contenido;
+            operadorCondicion = operador;
             match(Tipos.OpRelacional);
             Expresion(); //E2
             float R2 = S.Pop();
             float R1 = S.Pop();
-
+            nuevoValor = R2;
             switch (operador)
             {
                 case ">": return R1 > R2;
@@ -399,18 +411,39 @@ namespace Semantica
         //While -> while(Condicion) bloqueInstrucciones | instruccion
         private void While(bool ejecutar)
         {
+            int cTemp = caracter - 6;
+            int lTemp = linea;
+            bool resultado = false;
             match("while");
             match("(");
-            Condicion();
+            resultado = Condicion() && ejecutar;
             match(")");
-            if (Contenido == "{")
+            while (resultado)
             {
-                BloqueInstrucciones(ejecutar);
+                if (Contenido == "{")
+                {
+                    BloqueInstrucciones(ejecutar);
+                }
+                else
+                {
+                    Instruccion(ejecutar);
+                }
+
+                if (resultado)
+                {
+                    caracter = cTemp;
+                    linea = lTemp;
+                    archivo.DiscardBufferedData();
+                    archivo.BaseStream.Seek(cTemp, System.IO.SeekOrigin.Begin);
+                    nextToken();
+
+                    match("while");
+                    match("(");
+                    resultado = Condicion() && ejecutar;
+                    match(")");
+                }
             }
-            else
-            {
-                Instruccion(ejecutar);
-            }
+
         }
 
         //Do -> do 
@@ -418,7 +451,7 @@ namespace Semantica
         //while(Condicion);
         private void Do(bool ejecutar)
         {
-            int cTemp = caracter -3;
+            int cTemp = caracter - 3;
             int ltemp = linea;
             bool resultado = false;
             do
@@ -437,6 +470,7 @@ namespace Semantica
                 resultado = Condicion() && ejecutar;
                 match(")");
                 match(";");
+
                 if (resultado)
                 {
                     caracter = cTemp;
@@ -445,28 +479,231 @@ namespace Semantica
                     archivo.BaseStream.Seek(cTemp, System.IO.SeekOrigin.Begin);
                     nextToken();
                 }
-            }while(resultado);
+            } while (resultado);
         }
 
         //For -> for(Asignacion Condicion; Incremento) 
         //BloqueInstrucciones | Intruccion 
         private void For(bool ejecutar)
         {
+            int cTemp = caracter - 4;
+            int ltemp = linea;
+            float inicio, final;
+            string condicional, incrementador;
             match("for");
             match("(");
             Asignacion(ejecutar);
+            inicio = nuevoValor;
             match(";");
             Condicion();
+            final = nuevoValor;
+            condicional = operadorCondicion;
             match(";");
             Asignacion(ejecutar);
+            incrementador = operadorCondicion;
             match(")");
             if (Contenido == "{")
             {
-                BloqueInstrucciones(ejecutar);
+                switch (condicional)
+                {
+                    case "<":
+                        if (incrementador == "++")
+                        {
+                            if (inicio >= final)
+                            {
+                                throw new Error("Semantico, la condición no es posible", log, linea);
+                            }
+                            else
+                            {
+                                if (ejecutar)
+                                    BloqueInstrucciones(true);
+                                for (float i = inicio + 1; i < final; i++)
+                                {
+
+                                    caracter = cTemp;
+                                    linea = ltemp;
+                                    archivo.DiscardBufferedData();
+                                    archivo.BaseStream.Seek(cTemp, System.IO.SeekOrigin.Begin);
+                                    nextToken();
+                                }
+                            }
+                        }
+                        else
+                        {
+                            throw new Error("Semantico, condicion infinita", log, linea);
+                        }
+                        break;
+
+                    case ">":
+                        if (incrementador == "--")
+                        {
+                            if (inicio <= final)
+                            {
+                                throw new Error("Semantico, la condición no es posible", log, linea);
+                            }
+                            else
+                            {
+                                for (float i = inicio; i > final; i--)
+                                {
+                                    if (ejecutar)
+                                        BloqueInstrucciones(true);
+                                }
+                            }
+                        }
+                        else
+                        {
+                            throw new Error("Semantico, condicion infinita", log, linea);
+                        }
+                        break;
+
+                    case "<=":
+                        if (incrementador == "++")
+                        {
+                            if (inicio > final)
+                            {
+                                throw new Error("Semantico, la condición no es posible", log, linea);
+                            }
+                            else
+                            {
+                                if (ejecutar)
+                                {
+                                    BloqueInstrucciones(true);
+                                    for (float i = inicio + 1; i <= final; i++)
+                                    {
+                                        caracter = cTemp;
+                                        linea = ltemp;
+                                        archivo.DiscardBufferedData();
+                                        archivo.BaseStream.Seek(cTemp, System.IO.SeekOrigin.Begin);
+                                        nextToken();
+                                    }
+                                }
+                            }
+                        }
+                        else
+                        {
+                            throw new Error("Semantico, condicion infinita", log, linea);
+                        }
+                        break;
+
+                    case ">=":
+                        if (incrementador == "--")
+                        {
+                            if (inicio < final)
+                            {
+                                throw new Error("Semantico, la condición no es posible", log, linea);
+                            }
+                            else
+                            {
+                                for (float i = inicio; i >= final; i--)
+                                {
+                                    if (ejecutar)
+                                        BloqueInstrucciones(true);
+                                }
+                            }
+                        }
+                        else
+                        {
+                            throw new Error("Semantico, condicion infinita", log, linea);
+                        }
+                        break;
+                    default:
+                        throw new Error("Error: estructura erronea", log, linea);
+                }
             }
             else
             {
-                Instruccion(true);
+                switch (condicional)
+                {
+                    case "<":
+                        if (incrementador == "++")
+                        {
+                            if (inicio >= final)
+                            {
+                                throw new Error("Semantico, la condición no es posible", log, linea);
+                            }
+                            else
+                            {
+                                for (float i = inicio; i < final; i++)
+                                {
+                                    if (ejecutar)
+                                        Instruccion(true);
+                                }
+                            }
+                        }
+                        else
+                        {
+                            throw new Error("Semantico, condicion infinita", log, linea);
+                        }
+                        break;
+
+                    case ">":
+                        if (incrementador == "--")
+                        {
+                            if (inicio <= final)
+                            {
+                                throw new Error("Semantico, la condición no es posible", log, linea);
+                            }
+                            else
+                            {
+                                for (float i = inicio; i > final; i--)
+                                {
+                                    if (ejecutar)
+                                        Instruccion(true);
+                                }
+                            }
+                        }
+                        else
+                        {
+                            throw new Error("Semantico, condicion infinita", log, linea);
+                        }
+                        break;
+
+                    case "<=":
+                        if (incrementador == "++")
+                        {
+                            if (inicio > final)
+                            {
+                                throw new Error("Semantico, la condición no es posible", log, linea);
+                            }
+                            else
+                            {
+                                for (float i = inicio; i <= final; i++)
+                                {
+                                    if (ejecutar)
+                                        Instruccion(true);
+                                }
+                            }
+                        }
+                        else
+                        {
+                            throw new Error("Semantico, condicion infinita", log, linea);
+                        }
+                        break;
+
+                    case ">=":
+                        if (incrementador == "--")
+                        {
+                            if (inicio < final)
+                            {
+                                throw new Error("Semantico, la condición no es posible", log, linea);
+                            }
+                            else
+                            {
+                                for (float i = inicio; i >= final; i--)
+                                {
+                                    if (ejecutar)
+                                        Instruccion(true);
+                                }
+                            }
+                        }
+                        else
+                        {
+                            throw new Error("Semantico, condicion infinita", log, linea);
+                        }
+                        break;
+                    default:
+                        throw new Error("Error: estructura erronea", log, linea);
+                }
             }
         }
 
@@ -477,9 +714,12 @@ namespace Semantica
         {
             match("Console");
             match(".");
+            bool esWriteLine = false;
+
             if (Contenido == "WriteLine")
             {
                 match("WriteLine");
+                esWriteLine = true;
             }
             else
             {
@@ -488,28 +728,95 @@ namespace Semantica
             match("(");
             if (Clasificacion == Tipos.Cadena)
             {
+                string contenido = Contenido;
+                contenido = contenido.Trim('"');
                 if (ejecutar)
                 {
-                    Console.WriteLine(Contenido);
+                    if (esWriteLine)
+                    {
+                        Console.WriteLine(contenido);
+                    }
+                    else
+                    {
+                        Console.Write(contenido);
+                    }
                 }
                 match(Tipos.Cadena);
                 if (Contenido == "+")
                 {
-                    listaConcatenacion();
+                    listaConcatenacion(ejecutar, esWriteLine);
                 }
             }
             match(")");
             match(";");
-
         }
+        //6
+        /*string listaConcatenacion()
+        {
+            // Lista de números
+            List<int> numeros = new List<
+            int> { 30, 40, 50, 12, 0 };
+            string resultado = "Lista de concatenación: ";
+            // Concatenar los números en el formato deseado
+            for (int i = 0; i < numeros.Count; i++)
+            {
+                resultado += numeros[i].ToString();
+                // Si no es el último número, agregar una coma y un espacio
+                if (i < numeros.Count - 1)
+                {
+                    resultado += ", ";
+                }
+            }
+            // Imprimir el resultado
+            Console.WriteLine(resultado);
+            //return resultado;
+        }*/
 
-        string listaConcatenacion()
+        string listaConcatenacion(bool ejecutar, bool esWriteLine)
         {
             match("+");
-            match(Tipos.Identificador);
+            if (Clasificacion == Tipos.Cadena)
+            {
+                string contenido = Contenido.Trim('"');
+
+                if (ejecutar)
+                {
+                    if (esWriteLine)
+                    {
+                        Console.WriteLine(contenido);
+                    }
+                    else
+                    {
+                        Console.Write(contenido);
+                    }
+                }
+                match(Tipos.Cadena);
+            }
+            else if (Clasificacion == Tipos.Identificador)
+            {
+                var v = BuscarVariable(Contenido);
+                S.Push(v.getValor());
+                tipoDatoExpresion = v.getTipo();
+
+                float valor = v.getValor();
+
+                if (ejecutar)
+                {
+                    if (esWriteLine)
+                    {
+                        Console.WriteLine(valor);
+                    }
+                    else
+                    {
+                        Console.Write(valor);
+                    }
+                }
+                match(Tipos.Identificador);
+            }
+
             if (Contenido == "+")
             {
-                listaConcatenacion();
+                listaConcatenacion(ejecutar, esWriteLine);
             }
             return "";
         }
@@ -648,6 +955,8 @@ namespace Semantica
                 }
             }
         }
+
+        
 
         /*private void Validacion(Token variable)
         {

@@ -1,1 +1,0 @@
-; Autor: Rafael Mejía

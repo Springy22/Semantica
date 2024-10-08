@@ -8,7 +8,6 @@ namespace Semantica
 {
     public class Lexico : Token, IDisposable
     {
-        public int linea12 = 0;
         protected StreamReader archivo;
         public StreamWriter log;
         protected StreamWriter asm;
@@ -52,24 +51,6 @@ namespace Semantica
             {F,F, 32, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F}
 
         };
-        /*public Lexico() // Constructor
-        {
-            linea = 0;
-            log = new StreamWriter("prueba.log");
-            log.AutoFlush = true;
-            asm = new StreamWriter("prueba.asm");
-            asm.AutoFlush = true;
-            log.WriteLine("Analizador Lexico");
-            log.WriteLine("Autor: Rafael Mejía");
-            asm.WriteLine("; Autor: Rafael Mejía");
-
-            if (!File.Exists("prueba.cpp"))
-            {
-                throw new Error("El archivo prueba.cpp no existe", log);
-            }
-            archivo = new StreamReader("Prueba.cpp");
-        }
-        */
         public Lexico(string nombre = "prueba.cpp") // Constructor
         {
             linea = caracter = 1;
@@ -78,8 +59,6 @@ namespace Semantica
             asm = new StreamWriter(Path.GetFileNameWithoutExtension(nombre) + ".asm");
             asm.AutoFlush = true;
             log.WriteLine("Analizador Lexico");
-            log.WriteLine("Autor: Rafael Mejía");
-            asm.WriteLine("; Autor: Rafael Mejía");
 
             if (Path.GetExtension(nombre) != ".cpp")
             {
@@ -118,7 +97,6 @@ namespace Semantica
             else if (char.IsLetter(c))
             {
                 return 1;
-
             }
             else if (char.IsDigit(c))
             {
@@ -215,18 +193,17 @@ namespace Semantica
                 case 12: Clasificacion = Tipos.OpFactor; break;
                 case 13: Clasificacion = Tipos.IncFactor; break;
                 case 14:
-                case 15: Clasificacion = (Tipos.Caracter); break;
-                case 16: Clasificacion = (Tipos.OpLogico); break;
-                case 17: Clasificacion = (Tipos.OpRelacional); break;
-                case 18: Clasificacion = (Tipos.Asignacion); break;
-                case 19: Clasificacion = (Tipos.OpLogico); break;
-                case 20: Clasificacion = (Tipos.OpRelacional); break;
-                case 21: Clasificacion = (Tipos.OpTernario); break;
-                case 22: Clasificacion = (Tipos.Cadena); break;
-                case 24: Clasificacion = (Tipos.Inicio); break;
-                case 25: Clasificacion = (Tipos.Fin); break;
-                case 26: Clasificacion = (Tipos.Caracter); break;
-
+                case 15: Clasificacion = Tipos.Caracter; break;
+                case 16: Clasificacion = Tipos.OpLogico; break;
+                case 17: Clasificacion = Tipos.OpRelacional; break;
+                case 18: Clasificacion = Tipos.Asignacion; break;
+                case 19: Clasificacion = Tipos.OpLogico; break;
+                case 20: Clasificacion = Tipos.OpRelacional; break;
+                case 21: Clasificacion = Tipos.OpTernario; break;
+                case 22: Clasificacion = Tipos.Cadena; break;
+                case 24: Clasificacion = Tipos.Inicio; break;
+                case 25: Clasificacion = Tipos.Fin; break;
+                case 26: Clasificacion = Tipos.Caracter; break;
             }
         }
         public void nextToken()
@@ -251,27 +228,27 @@ namespace Semantica
                     {
                         buffer += c;
                     }
+                    if (c == '\n')
+                    {
+                        linea++;
+                    }
                     caracter++;
                     archivo.Read();
-                }
-                if (c == '\n')
-                {
-                    linea12++;
                 }
             }
             if (Estado == E)
             {
                 if (Clasificacion == Tipos.Numero)
                 {
-                    throw new Error(" Se espera un digito " + buffer, log, linea12);
+                    throw new Error(" Se espera un digito " + buffer, log, linea);
                 }
                 else if (Clasificacion == Tipos.Cadena)
                 {
-                    throw new Error(" Se espera cierre de cadena " + buffer, log, linea12);
+                    throw new Error(" Se espera cierre de cadena " + buffer, log, linea);
                 }
                 else if (Clasificacion == Tipos.OpFactor)
                 {
-                    throw new Error(" Se espera un cierre de comentario\n " + buffer, log,linea12);
+                    throw new Error(" Se espera un cierre de comentario\n " + buffer, log, linea);
                 }
             }
             Contenido = buffer;
@@ -284,13 +261,13 @@ namespace Semantica
                     case "float": Clasificacion = Tipos.TipoDato; break;
                     case "if":
                     case "else":
-                    case "switch": Clasificacion = (Tipos.Condicion); break;
+                    case "switch": Clasificacion = Tipos.Condicion; break;
                     case "while":
                     case "do":
-                    case "for": Clasificacion = (Tipos.Ciclo); break;
+                    case "for": Clasificacion = Tipos.Ciclo; break;
                 }
             }
-            log.WriteLine(Contenido + " = " + Clasificacion);
+            // log.WriteLine(getContenido() + " = " + getClasificacion());
         }
         public bool finArchivo()
         {

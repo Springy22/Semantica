@@ -23,7 +23,7 @@ namespace Semantica
             }
             else
             {
-                throw new Error("Sintaxis: se espera un " + espera + " (" + Contenido + ")" + " en la linea: " + contadorLinea(), log);
+                throw new Error("Sintaxis: se espera un " + espera + " (" + Contenido + ")" + "en la linea: " + linea, log);
             }
         }
         public void match(Tipos espera)
@@ -34,10 +34,11 @@ namespace Semantica
             }
             else
             {
-                throw new Error("Sintaxis: se espera un " + espera + " (" + Contenido + ")" + " en la linea: " + contadorLinea(), log);
+                throw new Error("Sintaxis: se espera un " + espera + " (" + Contenido + ")" + "en la linea: " + linea, log);
             }
         }
 
+        /*
         private int contadorLinea(){
             int laine = new Lexico().linea12;
             laine=laine-10;
@@ -48,5 +49,6 @@ namespace Semantica
             }
             return laine;
         }
+        */
     }
 }

@@ -267,7 +267,7 @@ namespace Semantica
                     case "for": Clasificacion = Tipos.Ciclo; break;
                 }
             }
-            // log.WriteLine(getContenido() + " = " + getClasificacion());
+             log.WriteLine(Contenido + " = " + Clasificacion);
         }
         public bool finArchivo()
         {

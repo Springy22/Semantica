@@ -1,27 +1,20 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http.Headers;
+using System.Reflection.Metadata.Ecma335;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
-using Semantica;
 
 /*
-    1. Usar metodo find en lugar del for each
-    2. Validar que no existam variables duplicadas --> Listo, falta comprobar
-    3. Validar que existan las variables en las expresiones matematicas
-       Asignación
-    4. Asignar una expresion matematica a la variable al momento de declararla
-    verificando la semantica
-    5. Validar que en el ReadLine se capturen solo números e implementar una excepción
-    6. ** listaConcatenacion: 30, 40, 50, 12, 0
+    El proyecto genera código ASM en: masm o masm o ... excepto emu8086
 
-    Console.WriteLine("Hola = "+a+b+c);
-
-    7. Quiter comillas y considerar el write
-    8. Emular el for   --- 15 pts
-    9. Emular el while --- 15 pts
-
-    En el for validar si las variables existen, y en listaIdentificadores validar que no 
-    existan
+    1. Completar la asignación
+    2. Hacer Console.Write && Console.WriteLine
+    3. Hace Console.Read & Console.ReadLine
+    4. Considerar el else en el IF
+    5. Programar el while
+    6. Programar el for
     
 */
 
@@ -30,22 +23,26 @@ namespace Semantica
     public class Lenguaje : Sintaxis
     {
         List<Variable> listaVariables;
-        private Stack<float> S;
         private float nuevoValor;
         private string operadorCondicion;
         private Variable.TipoDato tipoDatoExpresion;
+        private int cIFs, cDOs, cWhiles;
         public Lenguaje()
         {
             log.WriteLine("Analizador Sintactico");
+            asm.WriteLine("; Analizador Sintactico");
+            asm.WriteLine("; Analizador Semantico");
             listaVariables = new List<Variable>();
-            S = new Stack<float>();
+            cIFs = cDOs = 1;
         }
 
         public Lenguaje(String nombre) : base(nombre)
         {
             log.WriteLine("Analizador Sintactico");
+            asm.WriteLine("; Analizador Sintactico");
+            asm.WriteLine("; Analizador Semantico");
             listaVariables = new List<Variable>();
-            S = new Stack<float>();
+            cIFs = cDOs = 1;
         }
 
         //Programa  -> Librerias? Variables? Main
@@ -248,12 +245,15 @@ namespace Semantica
                 {
                     Expresion();
                     nuevoValor = S.Pop();
+                    asm.WriteLine("\tpop eax");
+                    asm.WriteLine("\tmov " + variable + ", eax");
                 }
             }
             else if (Contenido == "++")
             {
                 operadorCondicion = Contenido;
                 match("++");
+                asm.WriteLine("");
                 nuevoValor++;
             }
             else if (Contenido == "--")
@@ -362,9 +362,11 @@ namespace Semantica
         //(else bloqueInstrucciones | instruccion)?
         private void If(bool ejecutar)
         {
+            asm.WriteLine(": if " + cIFs);
+            string etiqueta = "_if" + cIFs++;
             match("if");
             match("(");
-            bool resultado = Condicion();
+            bool resultado = Condicion(etiqueta);
             match(")");
             if (Contenido == "{")
             {
@@ -386,10 +388,12 @@ namespace Semantica
                     Instruccion(!resultado && ejecutar);
                 }
             }
+            asm.WriteLine(etiqueta + ":");
+            //Generar una etiqueta
         }
 
         //Condicion -> Expresion operadorRelacional Expresion
-        private bool Condicion()
+        private void Condicion(string etiqueta)
         {
             Expresion(); //E1
             string operador = Contenido;
@@ -397,15 +401,22 @@ namespace Semantica
             match(Tipos.OpRelacional);
             Expresion(); //E2
             float R2 = S.Pop();
+            asm.WriteLine("\tpop eax");
             float R1 = S.Pop();
+            asm.WriteLine("\tpop bx");
+            asm.WriteLine("\tcmp eax, bx");
             switch (operador)
             {
                 case ">": return R1 > R2;
                 case ">=": return R1 >= R2;
                 case "<": return R1 < R2;
                 case "<=": return R1 <= R2;
-                case "==": return R1 == R2;
-                default: return R1 != R2;
+                case "==":
+                    asm.WriteLine("\tjne " + etiqueta);
+                    return R1 == R2;
+                default:
+                    asm.WriteLine("\tje " + etiqueta);
+                    return R1 != R2;
             }
         }
 
@@ -417,7 +428,7 @@ namespace Semantica
             bool resultado = false;
             match("while");
             match("(");
-            resultado = Condicion() && ejecutar;
+            resultado = Condicion("") && ejecutar;
             match(")");
             while (resultado)
             {
@@ -440,7 +451,7 @@ namespace Semantica
 
                     match("while");
                     match("(");
-                    resultado = Condicion() && ejecutar;
+                    resultado = Condicion("") && ejecutar;
                     match(")");
                 }
             }
@@ -451,6 +462,9 @@ namespace Semantica
         //while(Condicion);
         private void Do(bool ejecutar)
         {
+            asm.WriteLine("; do" + cDOs);
+            string etiqueta = "_do" + cDOs++;
+            asm.WriteLine(etiqueta + ":");
             int cTemp = caracter - 3;
             int ltemp = linea;
             bool resultado = false;
@@ -467,7 +481,7 @@ namespace Semantica
                 }
                 match("while");
                 match("(");
-                resultado = Condicion() && ejecutar;
+                resultado = Condicion(etiqueta) && ejecutar;
                 match(")");
                 match(";");
 
@@ -499,7 +513,7 @@ namespace Semantica
             match(";");
 
             // Evaluar la condición
-            bool condicion = Condicion() && ejecutar;
+            bool condicion = Condicion("") && ejecutar;
             match(";");      // Reconocer ';'
 
             // Procesar el incremento
@@ -536,7 +550,7 @@ namespace Semantica
                 match("(");
                 Asignacion(ejecutar); // Inicialización (puede omitirse si no es necesaria)
                 match(";");
-                condicion = Condicion() && ejecutar;
+                condicion = Condicion("") && ejecutar;
                 match(";");
 
                 operadorIncremento = operadorCondicion;
@@ -597,11 +611,12 @@ namespace Semantica
             match(";");
         }
 
-        /*
+
         string listaConcatenacion()
         {
             // Inicializa una lista para construir la concatenación
             List<string> elementos = new List<string>();
+            string nuevoValor = Contenido;
 
             // Elimina las comillas y agrega el valor inicial a la lista
             elementos.Add(nuevoValor.Trim('"'));
@@ -629,7 +644,7 @@ namespace Semantica
 
             // Devuelve la concatenación de todos los elementos de la lista
             return string.Join("", elementos);
-        }*/
+        }
 
 
         string listaConcatenacion(bool ejecutar, bool esWriteLine)
@@ -686,108 +701,6 @@ namespace Semantica
 
             return "";
         }
-        /*
-        string listaConcatenacion(bool ejecutar, bool esWriteLine)
-        {
-            string resultado = "";  // Acumulador para la concatenación
-
-            match("+");
-
-            // Procesa cadenas
-            if (Clasificacion == Tipos.Cadena)
-            {
-                string contenido = Contenido.Trim('"');
-
-                if (ejecutar)
-                {
-                    resultado += contenido;
-                }
-                match(Tipos.Cadena);
-            }
-            // Procesa identificadores
-            else if (Clasificacion == Tipos.Identificador)
-            {
-                var v = BuscarVariable(Contenido);
-                S.Push(v.getValor());
-                tipoDatoExpresion = v.getTipo();
-
-                float valor = v.getValor();
-
-                if (ejecutar)
-                {
-                    resultado += valor.ToString();  // Convierte el valor a string y lo agrega al resultado
-                }
-                match(Tipos.Identificador);
-            }
-
-            // Si hay más concatenaciones
-            if (Contenido == "+")
-            {
-                //match("+");
-                resultado += listaConcatenacion(ejecutar, esWriteLine);  // Recursión
-            }
-
-            // Si es la última concatenación, imprime el resultado
-            if (ejecutar && esWriteLine)
-            {
-                Console.WriteLine(resultado);  // Imprime todo el resultado acumulado
-            }
-            else if (ejecutar)
-            {
-                Console.Write(resultado);  // Imprime sin salto de línea
-            }
-            return resultado;  // Devuelve el resultado acumulado
-        }*/
-
-        /*string listaConcatenacion(bool ejecutar, bool esWriteLine)
-        {
-            match("+");
-            if (Clasificacion == Tipos.Cadena)
-            {
-                string contenido = Contenido.Trim('"');
-
-                if (ejecutar)
-                {
-                    if (esWriteLine)
-                    {
-                        Console.WriteLine(contenido);
-                    }
-                    else
-                    {
-                        Console.Write(contenido);
-                    }
-                }
-                match(Tipos.Cadena);
-            }
-            else if (Clasificacion == Tipos.Identificador)
-            {
-                var v = BuscarVariable(Contenido);
-                S.Push(v.getValor());
-                tipoDatoExpresion = v.getTipo();
-
-                float valor = v.getValor();
-
-                if (ejecutar)
-                {
-                    if (esWriteLine)
-                    {
-                        Console.WriteLine(valor);
-                    }
-                    else
-                    {
-                        Console.Write(valor);
-                    }
-                }
-                match(Tipos.Identificador);
-            }
-
-            if (Contenido == "+")
-            {
-                listaConcatenacion(ejecutar, esWriteLine);
-            }
-            return "";
-
-        }*/
 
         //Main      -> static void Main(string[] args) BloqueInstrucciones 
         private void Main()
@@ -923,68 +836,6 @@ namespace Semantica
                 }
             }
         }
-        /*private void Validacion(Token variable)
-        {
-            string contenido = Contenido;
-            switch (variable.Contenido)
-            {
-                case "char":
-                    {
-                        if (contenido.Length == 1)
-                        {
-                            log.WriteLine("Es un char valido " + contenido);
-                        }
-                        else
-                        {
-                            log.WriteLine("Error: No es un char valido " + contenido);
-                        }
-                    }
-                    break;
-
-                case "int":
-                    {
-                        int numero;
-                        if (int.TryParse(contenido, out numero))
-                        {
-                            if (numero >= int.MinValue && numero <= int.MaxValue)
-                            {
-                                log.WriteLine("Es un int valido y " + contenido + " esta dentro de rango");
-                            }
-                            else
-                            {
-                                log.WriteLine("Error: No es un int valido y " + contenido + " esta fuera de rango");
-                            }
-                        }
-                        else
-                        {
-                            log.WriteLine("Error: No es un int valido");
-                        }
-                    }
-                    break;
-
-                case "float":
-                    {
-                        float numero;
-                        if (float.TryParse(contenido, out numero))
-                        {
-                            if (numero >= float.MinValue && numero <= float.MaxValue)
-                            {
-                                log.WriteLine("Es un float valido y " + contenido + " esta dentro de rango");
-                            }
-                            else
-                            {
-                                log.WriteLine("Error: No es un float valido y " + contenido + " esta fuera de rango");
-                            }
-                        }
-                        else
-                        {
-                            log.WriteLine("Error: No es un float valido");
-                        }
-                    }
-                    break;
-            }
-        }
-        */
         /*public int contadorLinea(){
             linea12=linea12-10;
             int diferencia;

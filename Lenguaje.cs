@@ -184,7 +184,6 @@ namespace Semantica
         {
             string variable = Contenido;
             match(Tipos.Identificador);
-            //asm.WriteLine("; Asignacion a " + variable);
             bloqueCodigo.Add("; Asignacion a " + variable);
             var v = listaVariables.Find(delegate (Variable x) { return x.getNombre() == variable; });
             float nuevoValor = v.getValor();
@@ -210,23 +209,19 @@ namespace Semantica
                 else
                 {
                     Expresion();
-                    //asm.WriteLine("\tpop eax");
                     bloqueCodigo.Add("\tpop eax");
-                    //asm.WriteLine("\tmov " + variable + ", eax");
                     bloqueCodigo.Add("\tmov " + variable + ", eax");
                 }
             }
             else if (Contenido == "++")
             {
                 match("++");
-                //asm.WriteLine("\tinc " + variable);
                 bloqueCodigo.Add("\tinc " + variable);
                 nuevoValor++;
             }
             else if (Contenido == "--")
             {
                 match("--");
-                //asm.WriteLine("\tdec " + variable);
                 bloqueCodigo.Add("\tdec " + variable);
                 nuevoValor--;
             }
@@ -234,53 +229,46 @@ namespace Semantica
             {
                 match("+=");
                 Expresion();
-                //asm.WriteLine("\tpop eax");
                 bloqueCodigo.Add("\tpop eax");
             }
             else if (Contenido == "-=")
             {
                 match("-=");
                 Expresion();
-                //asm.WriteLine("\tpop eax");
                 bloqueCodigo.Add("\tpop eax");
             }
             else if (Contenido == "*=")
             {
                 match("*=");
                 Expresion();
-                //asm.WriteLine("\tpop eax");
                 bloqueCodigo.Add("\tpop eax");
             }
             else if (Contenido == "/=")
             {
                 match("/=");
                 Expresion();
-                //asm.WriteLine("\tpop eax");
                 bloqueCodigo.Add("\tpop eax");
             }
             else
             {
                 match("%=");
                 Expresion();
-                //asm.WriteLine("\tpop eax");
                 bloqueCodigo.Add("\tpop eax");
             }
             // match(";");            
             v.setValor(nuevoValor);
             // log.WriteLine(variable + " = " + nuevoValor);
-            //asm.WriteLine("; Termina asignacion a " + variable);
             bloqueCodigo.Add("; Termina asignacion a " + variable);
         }
         // If -> if (Condicion) bloqueInstrucciones | instruccion
         // (else bloqueInstrucciones | instruccion)?
         private void If()
         {
-            //asm.WriteLine("; if " + cIFs);
             bloqueCodigo.Add("; if " + cIFs);
             string etiqueta = "_if" + cIFs++;
             match("if");
             match("(");
-            Condicion(etiqueta);
+            Condicion(etiqueta,"");
             match(")");
             if (Contenido == "{")
             {
@@ -302,50 +290,58 @@ namespace Semantica
                     Instruccion();
                 }
             }
-            //asm.WriteLine(etiqueta + ":");
             bloqueCodigo.Add(etiqueta + ":");
             // Generar una etiqueta
         }
         // Condicion -> Expresion operadorRelacional Expresion
-        private void Condicion(string etiqueta)
+        private void Condicion(string etiqueta,string etiquetaMenorIgual)
         {
             Expresion(); // E1
             string operador = Contenido;
             match(Tipos.OpRelacional);
             Expresion(); // E2
-            //asm.WriteLine("\tpop eax");
             bloqueCodigo.Add("\tpop eax");
-            //asm.WriteLine("\tpop ebx");
             bloqueCodigo.Add("\tpop ebx");
-            //asm.WriteLine("\tcmp eax, ebx");
-            bloqueCodigo.Add("\tcmp eax, ebx");
+            bloqueCodigo.Add("\tcmp ebx, eax");
             switch (operador)
             {
-                case ">": 
-                case ">=": 
-                case "<": 
-                case "<=": 
-                case "==": //asm.WriteLine("\tjne "+etiqueta);
-                            bloqueCodigo.Add("\tjne "+etiqueta);
-                           break;
-                default:   //asm.WriteLine("\tje "+etiqueta);
-                            bloqueCodigo.Add("\tje "+etiqueta);
-                           break;
-                           
+                case ">":
+                    bloqueCodigo.Add("\tjz " + etiqueta);
+                    bloqueCodigo.Add("\tjc " + etiqueta);
+                    break;
+                case ">=":
+                    bloqueCodigo.Add("\tjc " + etiqueta);
+                    break;
+                case "<":
+                    bloqueCodigo.Add("\tjnc " + etiqueta);
+                    break;
+                case "<=":
+                    menorIgual = true;
+                    bloqueCodigo.Add("\tjz "+ etiquetaMenorIgual);
+                    bloqueCodigo.Add("\tjnc "+etiqueta);
+                    bloqueCodigo.Add(etiquetaMenorIgual + ":");
+                    
+                    break;
+                case "==":
+                    bloqueCodigo.Add("\tjnZ " + etiqueta);
+                    break;
+                default:
+                    bloqueCodigo.Add("\tje " + etiqueta);
+                    break;
+
             }
         }
         // While -> while(Condicion) bloqueInstrucciones | instruccion
         private void While()
         {
-            //asm.WriteLine("; while " + ++cWhiles);
             bloqueCodigo.Add("; while " + cWhiles);
-            string etiquetaIni = "_whileIni" + cWhiles; 
-            string etiquetaFin = "_whileFin" + cWhiles; 
+            string etiquetaIni = "_whileIni" + cWhiles;
+            string etiquetaFin = "_whileFin" + cWhiles;
+            string etiquetaMenorIgual = "_whileMenorIgual"+cWhiles;
             match("while");
             match("(");
-            //asm.WriteLine(etiquetaIni + ":");
             bloqueCodigo.Add(etiquetaIni + ":");
-            Condicion(etiquetaFin);
+            Condicion(etiquetaFin, etiquetaMenorIgual);
             match(")");
             if (Contenido == "{")
             {
@@ -355,9 +351,7 @@ namespace Semantica
             {
                 Instruccion();
             }
-            //asm.WriteLine("jmp "+etiquetaIni);
-            bloqueCodigo.Add("jmp "+etiquetaIni);
-            //asm.WriteLine(etiquetaFin + ":");
+                bloqueCodigo.Add("jmp " + etiquetaIni);
             bloqueCodigo.Add(etiquetaFin + ":");
         }
         // Do -> do 
@@ -365,10 +359,8 @@ namespace Semantica
         //       while(Condicion);
         private void Do()
         {
-            //asm.WriteLine("; do " + cDos);
             bloqueCodigo.Add("; do " + cDos);
             string etiqueta = "_do" + cDos++;
-            //asm.WriteLine(etiqueta + ":");
             bloqueCodigo.Add(etiqueta + ":");
             match("do");
             if (Contenido == "{")
@@ -381,7 +373,7 @@ namespace Semantica
             }
             match("while");
             match("(");
-            Condicion(etiqueta);
+            Condicion(etiqueta,"");
             match(")");
             match(";");
         }
@@ -393,7 +385,7 @@ namespace Semantica
             match("(");
             Asignacion();
             match(";");
-            Condicion("");
+            Condicion("","");
             match(";");
             Asignacion();
             match(")");
@@ -446,19 +438,16 @@ namespace Semantica
             asm.WriteLine();
             asm.WriteLine(".model flat,stdcall");
             asm.WriteLine(".stack 4096");
-            
+
         }
         private void asm_endMain()
         {
-            //asm.WriteLine("\tadd esp, 4\n");
-            //asm.WriteLine("\tmov eax, 1");
-            //asm.WriteLine("\txor ebx, ebx");
-            //asm.WriteLine("\tint 0x80");
             imprimeVariables();
             asm.WriteLine("\n.code");
             asm.WriteLine("ExitProcess PROTO, dwExitCode:DWORD");
             asm.WriteLine("main proc");
-            foreach(String bloque in bloqueCodigo){
+            foreach (String bloque in bloqueCodigo)
+            {
                 asm.WriteLine(bloque);
             }
             asm.WriteLine("\n\tINVOKE ExitProcess,0");
@@ -495,22 +484,16 @@ namespace Semantica
                 string operador = Contenido;
                 match(Tipos.OpTermino);
                 Termino();
-                //asm.WriteLine("\tpop ebx");
                 bloqueCodigo.Add("\tpop ebx");
-                //asm.WriteLine("\tpop eax");
                 bloqueCodigo.Add("\tpop eax");
                 switch (operador)
                 {
                     case "+":
-                        //asm.WriteLine("\tadd eax, ebx");
                         bloqueCodigo.Add("\tadd eax, ebx");
-                        //asm.WriteLine("\tpush eax");
                         bloqueCodigo.Add("\tpush eax");
                         break;
                     case "-":
-                        //asm.WriteLine("\tsub eax, ebx");
                         bloqueCodigo.Add("\tsub eax, ebx");
-                        //asm.WriteLine("\tpush eax");
                         bloqueCodigo.Add("\tpush eax");
                         break;
                 }
@@ -530,28 +513,20 @@ namespace Semantica
                 string operador = Contenido;
                 match(Tipos.OpFactor);
                 Factor();
-                //asm.WriteLine("\tpop ebx");
                 bloqueCodigo.Add("\tpop ebx");
-                //asm.WriteLine("\tpop eax");
                 bloqueCodigo.Add("\tpop eax");
                 switch (operador)
                 {
                     case "*":
-                        //asm.WriteLine("\tmul ebx");
                         bloqueCodigo.Add("\tmul ebx");
-                        //asm.WriteLine("\tpush eax");
                         bloqueCodigo.Add("\tpush eax");
                         break;
                     case "/":
-                        //asm.WriteLine("\tdiv ebx");
                         bloqueCodigo.Add("\tdiv ebx");
-                        //asm.WriteLine("\tpush eax");
                         bloqueCodigo.Add("\tpush eax");
                         break;
                     case "%":
-                        //asm.WriteLine("\tdiv ebx");
                         bloqueCodigo.Add("\tdiv ebx");
-                        //asm.WriteLine("\tpush edx");
                         bloqueCodigo.Add("\tpush edx");
                         break;
                 }
@@ -562,18 +537,14 @@ namespace Semantica
         {
             if (Clasificacion == Tipos.Numero)
             {
-                //asm.WriteLine("\tmov eax, " + Contenido);
                 bloqueCodigo.Add("\tmov eax, " + Contenido);
-                //asm.WriteLine("\tpush eax");
                 bloqueCodigo.Add("\tpush eax");
                 match(Tipos.Numero);
             }
             else if (Clasificacion == Tipos.Identificador)
             {
                 var v = listaVariables.Find(delegate (Variable x) { return x.getNombre() == Contenido; });
-                //asm.WriteLine("\tmov eax, " + Contenido);
                 bloqueCodigo.Add("\tmov eax, " + Contenido);
-                //asm.WriteLine("\tpush eax");
                 bloqueCodigo.Add("\tpush eax");
                 match(Tipos.Identificador);
             }

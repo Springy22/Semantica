@@ -22,8 +22,9 @@ namespace Semantica
     public class Lenguaje : Sintaxis
     {
         private List<Variable> listaVariables;
+        private List<String> listaLecturas = new List<string>();
         private List<String> bloqueCodigo;
-        private int cIFs, cDos, cWhiles, cFors;
+        private int cIFs, cDos, cWhiles, cFors, bC, fC, bS, fS;
         public Lenguaje()
         {
             log.WriteLine("Analizador Sintactico");
@@ -183,11 +184,12 @@ namespace Semantica
         private void Asignacion()
         {
             string variable = Contenido;
+            String bufferC, bufferS, formatC, formatS;
             match(Tipos.Identificador);
             bloqueCodigo.Add("; Asignacion a " + variable);
             var v = listaVariables.Find(delegate (Variable x) { return x.getNombre() == variable; });
             float nuevoValor = v.getValor();
-
+            
             if (Contenido == "=")
             {
                 match("=");
@@ -197,11 +199,38 @@ namespace Semantica
                     match(".");
                     if (Contenido == "Read")
                     {
+                        //match("Read");
+                        bufferC = "bufferChar"+bC;
+                        formatC = "formatChar"+fC;
+                        bC++;
+                        fC++;
                         match("Read");
+                        listaLecturas.Add("\t"+bufferC+" db 0");
+                        listaLecturas.Add("\t"+formatC+" db \"%c\", 0");
+                        bloqueCodigo.Add("\t;Usando Read");
+                        bloqueCodigo.Add("\tpop eax");
+                        bloqueCodigo.Add("\tmov eax, "+ bufferC);
+                        bloqueCodigo.Add("\tpush eax"); //Dirección buffer carácter
+                        bloqueCodigo.Add("\tpush "+formatC);// Formato leer carácter ("%c")
+                        bloqueCodigo.Add("\tcall scanf");// Llama scanf leer carácter
+                        bloqueCodigo.Add("\tadd esp, 8");
                     }
                     else
                     {
-                        match("ReadLine");
+                        //match("ReadLine");
+                        bufferS = "bufferString"+bS;
+                        formatS = "formatString"+fS;
+                        bS++;
+                        fS++;
+                        listaLecturas.Add("\t"+bufferS+" db 256 dup(0)");
+                        listaLecturas.Add("\t"+formatS+" db \"%s\", 0");
+                        bloqueCodigo.Add("\t;Usando ReadLine");
+                        bloqueCodigo.Add("\tpop eax");
+                        bloqueCodigo.Add("\tmov eax, "+ bufferS);
+                        bloqueCodigo.Add("\tpush eax");      // Dirección del buffer para la cadena
+                        bloqueCodigo.Add("\tpush "+formatS);      // Formato para leer una cadena ("%s")
+                        bloqueCodigo.Add("\tcall scanf");             // Llamar a scanf para leer la cadena
+                        bloqueCodigo.Add("\tadd esp, 8");  
                     }
                     match("(");
                     match(")");
@@ -230,24 +259,37 @@ namespace Semantica
                 match("+=");
                 Expresion();
                 bloqueCodigo.Add("\tpop eax");
+                bloqueCodigo.Add("\tmov ebx, " + variable);
+                bloqueCodigo.Add("\tadd ebx, eax");        
+                bloqueCodigo.Add("\tmov " + variable + ", ebx"); 
             }
             else if (Contenido == "-=")
             {
                 match("-=");
                 Expresion();
                 bloqueCodigo.Add("\tpop eax");
+                bloqueCodigo.Add("\tmov ebx, " + variable);
+                bloqueCodigo.Add("\tsub ebx, eax");        
+                bloqueCodigo.Add("\tmov " + variable + ", ebx");
             }
             else if (Contenido == "*=")
             {
                 match("*=");
                 Expresion();
                 bloqueCodigo.Add("\tpop eax");
+                bloqueCodigo.Add("\tmov ebx, " + variable);
+                bloqueCodigo.Add("\timul eax, ebx");
+                bloqueCodigo.Add("\tmov " + variable + ", eax");
             }
             else if (Contenido == "/=")
             {
                 match("/=");
                 Expresion();
                 bloqueCodigo.Add("\tpop eax");
+                bloqueCodigo.Add("\tmov ebx, " + variable);
+                bloqueCodigo.Add("\tcdq");
+                bloqueCodigo.Add("\tidiv eax");
+                bloqueCodigo.Add("\tmov " + variable + ", eax");
             }
             else
             {
@@ -264,12 +306,17 @@ namespace Semantica
         // (else bloqueInstrucciones | instruccion)?
         private void If()
         {
-            bloqueCodigo.Add("; if " + cIFs);
+            string etiquetaElse = "_else" + cIFs;
+            string etiquetaFin = "_finIf" + cIFs;
+            string etiquetaFinElse = "_finElse" + cIFs;
             string etiqueta = "_if" + cIFs++;
+            bloqueCodigo.Add("; if " + cIFs);
+            
             match("if");
             match("(");
-            Condicion(etiqueta, "");
+            Condicion(etiquetaElse, "");
             match(")");
+
             if (Contenido == "{")
             {
                 bloqueInstrucciones();
@@ -278,6 +325,10 @@ namespace Semantica
             {
                 Instruccion();
             }
+
+            bloqueCodigo.Add("jmp " + etiquetaFin);
+            bloqueCodigo.Add(etiquetaElse + ":");
+
             if (Contenido == "else")
             {
                 match("else");
@@ -289,8 +340,8 @@ namespace Semantica
                 {
                     Instruccion();
                 }
-            }
-            bloqueCodigo.Add(etiqueta + ":");
+            }   
+            bloqueCodigo.Add(etiquetaFin + ":");
             // Generar una etiqueta
         }
         // Condicion -> Expresion operadorRelacional Expresion

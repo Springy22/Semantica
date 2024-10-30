@@ -11,28 +11,15 @@
 .code
 ExitProcess PROTO, dwExitCode:DWORD
 main proc
-; for 1
-; Asignacion a y
-	mov eax, 3
-	push eax
+; Asignacion a x
+	;Usando Read
 	pop eax
-	mov y, eax
-; Termina asignacion a y
-_forIni1:
-	mov eax, y
+	mov eax, bufferChar0
 	push eax
-	mov eax, 1
-	push eax
-	pop eax
-	pop ebx
-	cmp ebx, eax
-	jz _forFin1
-	jc _forFin1
-; Asignacion a y
-	dec y
-; Termina asignacion a y
-jmp _forIni1
-_forFin1:
+	push formatChar0
+	call scanf
+	add esp, 8
+; Termina asignacion a x
 
 	INVOKE ExitProcess,0
 main endp

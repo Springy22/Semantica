@@ -11,14 +11,14 @@
 .code
 ExitProcess PROTO, dwExitCode:DWORD
 main proc
+; for 1
 ; Asignacion a y
-	mov eax, 2
+	mov eax, 3
 	push eax
 	pop eax
 	mov y, eax
 ; Termina asignacion a y
-; while 0
-_whileIni0:
+_forIni1:
 	mov eax, y
 	push eax
 	mov eax, 1
@@ -26,12 +26,13 @@ _whileIni0:
 	pop eax
 	pop ebx
 	cmp ebx, eax
-	jc _whileFin0
+	jz _forFin1
+	jc _forFin1
 ; Asignacion a y
 	dec y
 ; Termina asignacion a y
-jmp _whileIni0
-_whileFin0:
+jmp _forIni1
+_forFin1:
 
 	INVOKE ExitProcess,0
 main endp

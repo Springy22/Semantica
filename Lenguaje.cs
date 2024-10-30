@@ -23,7 +23,7 @@ namespace Semantica
     {
         private List<Variable> listaVariables;
         private List<String> bloqueCodigo;
-        private int cIFs, cDos, cWhiles;
+        private int cIFs, cDos, cWhiles, cFors;
         public Lenguaje()
         {
             log.WriteLine("Analizador Sintactico");
@@ -31,7 +31,7 @@ namespace Semantica
             asm.WriteLine("; Analizador Semantico");
             listaVariables = new List<Variable>();
             bloqueCodigo = new List<String>();
-            cIFs = cDos = 1;
+            cIFs = cDos = cWhiles = cFors = 1;
         }
         public Lenguaje(string nombre) : base(nombre)
         {
@@ -39,7 +39,7 @@ namespace Semantica
             asm.WriteLine("; Analizador Sintactico");
             asm.WriteLine("; Analizador Semantico");
             listaVariables = new List<Variable>();
-            cIFs = cDos = 1;
+            cIFs = cDos = cWhiles = cFors = 1;
             bloqueCodigo = new List<String>();
         }
         // Programa  -> Librerias? Main
@@ -268,7 +268,7 @@ namespace Semantica
             string etiqueta = "_if" + cIFs++;
             match("if");
             match("(");
-            Condicion(etiqueta,"");
+            Condicion(etiqueta, "");
             match(")");
             if (Contenido == "{")
             {
@@ -294,7 +294,7 @@ namespace Semantica
             // Generar una etiqueta
         }
         // Condicion -> Expresion operadorRelacional Expresion
-        private void Condicion(string etiqueta,string etiquetaMenorIgual)
+        private void Condicion(string etiqueta, string etiquetaMenorIgual)
         {
             Expresion(); // E1
             string operador = Contenido;
@@ -316,11 +316,10 @@ namespace Semantica
                     bloqueCodigo.Add("\tjnc " + etiqueta);
                     break;
                 case "<=":
-                    menorIgual = true;
-                    bloqueCodigo.Add("\tjz "+ etiquetaMenorIgual);
-                    bloqueCodigo.Add("\tjnc "+etiqueta);
+                    bloqueCodigo.Add("\tjz " + etiquetaMenorIgual);
+                    bloqueCodigo.Add("\tjnc " + etiqueta);
                     bloqueCodigo.Add(etiquetaMenorIgual + ":");
-                    
+
                     break;
                 case "==":
                     bloqueCodigo.Add("\tjnZ " + etiqueta);
@@ -337,7 +336,7 @@ namespace Semantica
             bloqueCodigo.Add("; while " + cWhiles);
             string etiquetaIni = "_whileIni" + cWhiles;
             string etiquetaFin = "_whileFin" + cWhiles;
-            string etiquetaMenorIgual = "_whileMenorIgual"+cWhiles;
+            string etiquetaMenorIgual = "_whileMenorIgual" + cWhiles++;
             match("while");
             match("(");
             bloqueCodigo.Add(etiquetaIni + ":");
@@ -351,7 +350,7 @@ namespace Semantica
             {
                 Instruccion();
             }
-                bloqueCodigo.Add("jmp " + etiquetaIni);
+            bloqueCodigo.Add("jmp " + etiquetaIni);
             bloqueCodigo.Add(etiquetaFin + ":");
         }
         // Do -> do 
@@ -373,7 +372,7 @@ namespace Semantica
             }
             match("while");
             match("(");
-            Condicion(etiqueta,"");
+            Condicion(etiqueta, "");
             match(")");
             match(";");
         }
@@ -381,11 +380,16 @@ namespace Semantica
         //          BloqueInstrucciones | Intruccion
         private void For()
         {
+            bloqueCodigo.Add("; for " + cFors);
+            string etiquetaIni="_forIni"+cFors;
+            string etiquetaFin="_forFin"+cFors;
+            string etiquetaMenorIgual = "_forMenorIgual" + cFors++;
             match("for");
             match("(");
             Asignacion();
             match(";");
-            Condicion("","");
+            bloqueCodigo.Add(etiquetaIni + ":");
+            Condicion(etiquetaFin, etiquetaMenorIgual);
             match(";");
             Asignacion();
             match(")");
@@ -397,6 +401,8 @@ namespace Semantica
             {
                 Instruccion();
             }
+            bloqueCodigo.Add("jmp " + etiquetaIni);
+            bloqueCodigo.Add(etiquetaFin + ":");
         }
         // Console -> Console.(WriteLine|Write) (cadena?);
         private void console()

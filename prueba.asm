@@ -3,6 +3,9 @@
 
 .model flat,stdcall
 .stack 4096
+newline db 10, 0
+bufferChar db 0
+bufferString db 256 dup(0)
 
 .data
 	x dd 0

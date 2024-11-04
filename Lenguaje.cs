@@ -9,12 +9,12 @@ using System.Threading.Tasks;
 /*
     El proyecto generea código ASM en: nasm o masm o ... excerpto emu8086
 
-    1. Completar la asignacion
-    2. Console.Write & Console.WriteLine
-    3. Console.Read & Console.ReadLine
-    4. Considerar el else en el IF
-    5. Programar el while
-    6. Programar el for
+    1. Completar la asignacion j
+    2. Console.Write & Console.WriteLine m
+    3. Console.Read & Console.ReadLine m
+    4. Considerar el else en el IF j
+    5. Programar el while i
+    6. Programar el for i
 
 */
 namespace Semantica
@@ -22,7 +22,7 @@ namespace Semantica
     public class Lenguaje : Sintaxis
     {
         private List<Variable> listaVariables;
-        private List<String> listaLecturas = new List<string>();
+        private List<string> listaLecturas = new List<string>();
         private List<String> bloqueCodigo;
         private int cIFs, cDos, cWhiles, cFors, bC, fC, bS, fS;
         public Lenguaje()
@@ -31,7 +31,7 @@ namespace Semantica
             asm.WriteLine("; Analizador Sintactico");
             asm.WriteLine("; Analizador Semantico");
             listaVariables = new List<Variable>();
-            bloqueCodigo = new List<String>();
+            bloqueCodigo = new List<string>();
             cIFs = cDos = cWhiles = cFors = 1;
         }
         public Lenguaje(string nombre) : base(nombre)
@@ -41,7 +41,7 @@ namespace Semantica
             asm.WriteLine("; Analizador Semantico");
             listaVariables = new List<Variable>();
             cIFs = cDos = cWhiles = cFors = 1;
-            bloqueCodigo = new List<String>();
+            bloqueCodigo = new List<string>();
         }
         // Programa  -> Librerias? Main
         public void Programa()
@@ -495,8 +495,11 @@ namespace Semantica
             asm.WriteLine();
             asm.WriteLine(".model flat,stdcall");
             asm.WriteLine(".stack 4096");
-
+            asm.WriteLine("newline db 10, 0"); //Salto de línea para WriteLine
+            asm.WriteLine("bufferChar db 0"); //Buffer para leer un carácter
+            asm.WriteLine("bufferString db 256 dup(0)"); //Buffer para leer una línea
         }
+
         private void asm_endMain()
         {
             imprimeVariables();

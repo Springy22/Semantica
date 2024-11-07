@@ -22,17 +22,21 @@ namespace Semantica
     public class Lenguaje : Sintaxis
     {
         private List<Variable> listaVariables;
+        private List<string> listaNombresVariables;
         private List<string> listCaracter = new List<string>();
+        private List<string> bloqueData;
         private List<String> bloqueCodigo;
-        private int cIFs, cDos, cWhiles, cFors, bC, fC, bS, fS;
+        private int cIFs, cDos, cWhiles, cFors, cWrites, cReads, cVariables, bC, fC, bS, fS;
         public Lenguaje()
         {
             log.WriteLine("Analizador Sintactico");
             asm.WriteLine("; Analizador Sintactico");
             asm.WriteLine("; Analizador Semantico");
             listaVariables = new List<Variable>();
+            listaNombresVariables = new List<string>();
             bloqueCodigo = new List<string>();
-            cIFs = cDos = cWhiles = cFors = 1;
+            bloqueData = new List<string>();
+            cIFs = cDos = cWhiles = cFors = cWrites = cReads = cVariables = 1;
         }
         public Lenguaje(string nombre) : base(nombre)
         {
@@ -40,8 +44,10 @@ namespace Semantica
             asm.WriteLine("; Analizador Sintactico");
             asm.WriteLine("; Analizador Semantico");
             listaVariables = new List<Variable>();
-            cIFs = cDos = cWhiles = cFors = 1;
+            listaNombresVariables = new List<string>();
+            cIFs = cDos = cWhiles = cFors = cWrites = cReads = cVariables = 1;
             bloqueCodigo = new List<string>();
+            bloqueData = new List<string>();
         }
         // Programa  -> Librerias? Main
         public void Programa()
@@ -94,33 +100,44 @@ namespace Semantica
         private void imprimeVariables()
         {
             // log.WriteLine("Lista de variables");
-            asm.WriteLine("\n.data");
+            //bloqueData.Add("\nsegment .data");
+            //bloqueData.Add("\ttexto db \"%d\",0");
+            //bloqueData.Add("\tspace db \"\", 10, 0");
             foreach (Variable v in listaVariables)
             {
                 // log.WriteLine(v.getNombre() + " (" + v.getTipo() + ") = " + v.getValor());
                 if (v.getTipo() == Variable.TipoDato.Char)
                 {
-                    asm.WriteLine("\t" + v.getNombre() + " db 0");
+                    bloqueData.Add("\t" + v.getNombre() + " dd 0");
+                    bloqueData.Add("\tnombreVariable" + cVariables++ + " db \"" + v.getNombre() + " = \", 0");
+                    //asm.WriteLine("\t" + v.getNombre() + " dd 0");
                 }
                 else if (v.getTipo() == Variable.TipoDato.Int)
                 {
-                    asm.WriteLine("\t" + v.getNombre() + " dd 0");
+                    bloqueData.Add("\t" + v.getNombre() + " dd 0");
+                    bloqueData.Add("\tnombreVariable" + cVariables++ + " db \"" + v.getNombre() + " = \", 0");
+                    //asm.WriteLine("\t" + v.getNombre() + " dd 0");
                 }
                 else
                 {
-                    asm.WriteLine("\t" + v.getNombre() + " dw 0 ");
+                    bloqueData.Add("\t" + v.getNombre() + " dd 0 ");
+                    bloqueData.Add("\tnombreVariable" + cVariables++ + " db \"" + v.getNombre() + " = \", 0");
+                    //asm.WriteLine("\t" + v.getNombre() + " dd 0 ");
                 }
             }
         }
         // ListaIdentificadores -> identificador (,ListaIdentificadores)?
         private void listaIdentificadores(Variable.TipoDato t)
         {
+            string variable = Contenido;
             listaVariables.Add(new Variable(Contenido, t));
             match(Tipos.Identificador);
             if (Contenido == "=")
             {
                 match("=");
-                Expresion();
+                Expresion(variable);
+                listaNombresVariables.Add(variable);
+                bloqueCodigo.Add("\tmov dword [" + variable + "], eax");
             }
             if (Contenido == ",")
             {
@@ -184,7 +201,7 @@ namespace Semantica
         private void Asignacion()
         {
             string variable = Contenido;
-            String bufferC, bufferS, formatC, formatS;
+            listaNombresVariables.Add(Contenido);
             match(Tipos.Identificador);
             bloqueCodigo.Add("; Asignacion a " + variable);
             var v = listaVariables.Find(delegate (Variable x) { return x.getNombre() == variable; });
@@ -200,101 +217,80 @@ namespace Semantica
                     if (Contenido == "Read")
                     {
                         //match("Read");
-                        bufferC = "bufferChar" + bC;
-                        formatC = "formatChar" + fC;
-                        bC++;
-                        fC++;
                         match("Read");
-                        listCaracter.Add("\t" + bufferC + " db 0");
-                        listCaracter.Add("\t" + formatC + " db \"%c\", 0");
-                        bloqueCodigo.Add("\t;Usando Read");
-                        bloqueCodigo.Add("\tpop eax");
-                        bloqueCodigo.Add("\tmov eax, " + bufferC);
-                        bloqueCodigo.Add("\tpush eax"); //Dirección buffer carácter
-                        bloqueCodigo.Add("\tpush " + formatC);// Formato leer carácter ("%c")
-                        bloqueCodigo.Add("\tcall scanf");// Llama scanf leer carácter
-                        bloqueCodigo.Add("\tadd esp, 8");
+
                     }
                     else
                     {
-                        //match("ReadLine");
-                        bufferS = "bufferString" + bS;
-                        formatS = "formatString" + fS;
-                        bS++;
-                        fS++;
-                        listCaracter.Add("\t" + bufferS + " db 256 dup(0)");
-                        listCaracter.Add("\t" + formatS + " db \"%s\", 0");
-                        bloqueCodigo.Add("\t;Usando ReadLine");
-                        bloqueCodigo.Add("\tpop eax");
-                        bloqueCodigo.Add("\tmov eax, " + bufferS);
-                        bloqueCodigo.Add("\tpush eax");      // Dirección del buffer para la cadena
-                        bloqueCodigo.Add("\tpush " + formatS);      // Formato para leer una cadena ("%s")
-                        bloqueCodigo.Add("\tcall scanf");             // Llamar a scanf para leer la cadena
-                        bloqueCodigo.Add("\tadd esp, 8");
+                        match("ReadLine");
+                        bloqueData.Add("\tformato" + cReads + " db \"%d\", 0");
+                        bloqueCodigo.Add("\tpush " + variable);
+                        bloqueCodigo.Add("\tpush formato" + cReads++);
+                        bloqueCodigo.Add("\tcall scanf");
                     }
                     match("(");
                     match(")");
                 }
                 else
                 {
-                    Expresion();
-                    bloqueCodigo.Add("\tpop eax");
-                    bloqueCodigo.Add("\tmov " + variable + ", eax");
+                    Expresion(variable);
+                    bloqueCodigo.Add("\tmov dword [" + variable + "] , eax");
                 }
             }
             else if (Contenido == "++")
             {
                 match("++");
-                bloqueCodigo.Add("\tinc " + variable);
+                bloqueCodigo.Add("\tinc dword [" + variable + "]");
+
                 nuevoValor++;
             }
             else if (Contenido == "--")
             {
                 match("--");
-                bloqueCodigo.Add("\tdec " + variable);
+                bloqueCodigo.Add("\tdec dword [" + variable + "]");
                 nuevoValor--;
             }
             else if (Contenido == "+=")
             {
                 match("+=");
-                Expresion();
+                Expresion("");
                 bloqueCodigo.Add("\tpop eax");
-                bloqueCodigo.Add("\tmov ebx, " + variable);
+                bloqueCodigo.Add("\tmov ebx, [" + variable + "]");
                 bloqueCodigo.Add("\tadd ebx, eax");
-                bloqueCodigo.Add("\tmov " + variable + ", ebx");
+                bloqueCodigo.Add("\tmov dword [" + variable + "] , ebx");
             }
             else if (Contenido == "-=")
             {
                 match("-=");
-                Expresion();
+                Expresion("");
                 bloqueCodigo.Add("\tpop eax");
-                bloqueCodigo.Add("\tmov ebx, " + variable);
+                bloqueCodigo.Add("\tmov ebx, [" + variable + "]");
                 bloqueCodigo.Add("\tsub ebx, eax");
-                bloqueCodigo.Add("\tmov " + variable + ", ebx");
+                bloqueCodigo.Add("\tmov dword [" + variable + "] , ebx");
             }
             else if (Contenido == "*=")
             {
                 match("*=");
-                Expresion();
+                Expresion("");
                 bloqueCodigo.Add("\tpop eax");
-                bloqueCodigo.Add("\tmov ebx, " + variable);
+                bloqueCodigo.Add("\tmov ebx, [" + variable + "]");
                 bloqueCodigo.Add("\timul eax, ebx");
-                bloqueCodigo.Add("\tmov " + variable + ", eax");
+                bloqueCodigo.Add("\tmov dword [" + variable + "], eax");
             }
             else if (Contenido == "/=")
             {
                 match("/=");
-                Expresion();
+                Expresion("");
                 bloqueCodigo.Add("\tpop eax");
-                bloqueCodigo.Add("\tmov ebx, " + variable);
+                bloqueCodigo.Add("\tmov ebx, [" + variable + "]");
                 bloqueCodigo.Add("\tcdq");
                 bloqueCodigo.Add("\tidiv eax");
-                bloqueCodigo.Add("\tmov " + variable + ", eax");
+                bloqueCodigo.Add("\tmov dword [" + variable + "], eax");
             }
             else
             {
                 match("%=");
-                Expresion();
+                Expresion("");
                 bloqueCodigo.Add("\tpop eax");
             }
             // match(";");            
@@ -348,10 +344,10 @@ namespace Semantica
         // Condicion -> Expresion operadorRelacional Expresion
         private void Condicion(string etiqueta, string etiquetaMenorIgual)
         {
-            Expresion(); // E1
+            Expresion(""); // E1
             string operador = Contenido;
             match(Tipos.OpRelacional);
-            Expresion(); // E2
+            Expresion(""); // E2
             bloqueCodigo.Add("\tpop eax");
             bloqueCodigo.Add("\tpop ebx");
             bloqueCodigo.Add("\tcmp ebx, eax");
@@ -379,7 +375,6 @@ namespace Semantica
                 default:
                     bloqueCodigo.Add("\tje " + etiqueta);
                     break;
-
             }
         }
         // While -> while(Condicion) bloqueInstrucciones | instruccion
@@ -411,8 +406,10 @@ namespace Semantica
         private void Do()
         {
             bloqueCodigo.Add("; do " + cDos);
-            string etiqueta = "_do" + cDos++;
-            bloqueCodigo.Add(etiqueta + ":");
+            string etiquetaIni = "_doIni" + cDos;
+            string etiquetaFin = "_doFin" + cDos;
+            string etiquetaMenorIgual = "_doMenorIgual" + cDos++;
+            bloqueCodigo.Add(etiquetaIni + ":");
             match("do");
             if (Contenido == "{")
             {
@@ -424,9 +421,11 @@ namespace Semantica
             }
             match("while");
             match("(");
-            Condicion(etiqueta, "");
+            Condicion(etiquetaFin, etiquetaMenorIgual);
             match(")");
             match(";");
+            bloqueCodigo.Add("jmp " + etiquetaIni);
+            bloqueCodigo.Add(etiquetaFin + ":");
         }
         // For -> for(Asignacion Condicion; Incremento) 
         //          BloqueInstrucciones | Intruccion
@@ -464,12 +463,23 @@ namespace Semantica
             if (Contenido == "WriteLine")
             {
                 match("WriteLine");
+                nextToken();
+                bloqueCodigo.Add(";WriteLine");
+                bloqueData.Add("\ttexto" + cWrites + " db " + Contenido + ", 10, 0");
+                bloqueCodigo.Add("\tpush texto" + cWrites++);
+                bloqueCodigo.Add("\tcall printf");
             }
             else
             {
                 match("Write");
+                nextToken();
+                bloqueCodigo.Add(";Write");
+                bloqueData.Add("\ttexto" + cWrites + " db " + Contenido + ", 0");
+                bloqueCodigo.Add("\tpush texto" + cWrites++);
+                bloqueCodigo.Add("\tcall printf");
             }
-            match("(");
+            nextToken();
+            //match("(");
             if (Clasificacion == Tipos.Cadena)
             {
                 match(Tipos.Cadena);
@@ -478,7 +488,8 @@ namespace Semantica
                     listaConcatenacion();
                 }
             }
-            match(")");
+            nextToken();
+            //match(")");
             match(";");
         }
         private string listaConcatenacion()
@@ -494,27 +505,35 @@ namespace Semantica
         private void asm_Main()
         {
             asm.WriteLine();
-            asm.WriteLine(".model flat,stdcall");
-            asm.WriteLine(".stack 4096");
-            /*asm.WriteLine("newline db 10, 0"); //Salto de línea para WriteLine
-            asm.WriteLine("bufferChar db 0"); //Buffer para leer un carácter
-            asm.WriteLine("bufferString db 256 dup(0)"); //Buffer para leer una línea
-            */
+            asm.WriteLine("extern printf");
+            asm.WriteLine("extern scanf");
+            asm.WriteLine("extern fflush");
+            asm.WriteLine("extern stdout");
         }
 
         private void asm_endMain()
         {
             imprimeVariables();
-            asm.WriteLine("\n.code");
-            asm.WriteLine("ExitProcess PROTO, dwExitCode:DWORD");
-            asm.WriteLine("main proc");
+            // log.WriteLine("Lista de variables");
+            asm.WriteLine("\nsegment .data");
+            asm.WriteLine("\ttexto db \"%d\",0");
+            asm.WriteLine("\tspace db \"\", 10, 0");
+            asm.WriteLine("\ttextoFinal db \"----LISTA DE VARIABLES----\", 10, 0");
+            foreach (string bloque in bloqueData)
+            {
+                asm.WriteLine(bloque);
+            }
+            asm.WriteLine("\nsegment .text");
+            asm.WriteLine("\tglobal main");
+            asm.WriteLine("\nmain:");
+
             foreach (String bloque in bloqueCodigo)
             {
                 asm.WriteLine(bloque);
             }
-            asm.WriteLine("\n\tINVOKE ExitProcess,0");
-            asm.WriteLine("main endp");
-            asm.WriteLine("\nend main");
+            //asm.WriteLine("push texto");
+            //asm.WriteLine("call printf");
+            imprimeValores();
         }
         // Main      -> static void Main(string[] args) BloqueInstrucciones 
         private void Main()
@@ -533,9 +552,9 @@ namespace Semantica
             asm_endMain();
         }
         // Expresion -> Termino MasTermino
-        private void Expresion()
+        private void Expresion(string variable)
         {
-            Termino();
+            Termino(variable);
             MasTermino();
         }
         // MasTermino -> (OperadorTermino Termino)?
@@ -545,7 +564,7 @@ namespace Semantica
             {
                 string operador = Contenido;
                 match(Tipos.OpTermino);
-                Termino();
+                Termino("");
                 bloqueCodigo.Add("\tpop ebx");
                 bloqueCodigo.Add("\tpop eax");
                 switch (operador)
@@ -562,9 +581,9 @@ namespace Semantica
             }
         }
         // Termino -> Factor PorFactor
-        private void Termino()
+        private void Termino(string variable)
         {
-            Factor();
+            Factor(variable);
             PorFactor();
         }
         // PorFactor -> (OperadorFactor Factor)?
@@ -574,7 +593,7 @@ namespace Semantica
             {
                 string operador = Contenido;
                 match(Tipos.OpFactor);
-                Factor();
+                Factor("");
                 bloqueCodigo.Add("\tpop ebx");
                 bloqueCodigo.Add("\tpop eax");
                 switch (operador)
@@ -595,26 +614,54 @@ namespace Semantica
             }
         }
         // Factor -> numero | identificador | (Expresion)
-        private void Factor()
+        private void Factor(string variable)
         {
             if (Clasificacion == Tipos.Numero)
             {
                 bloqueCodigo.Add("\tmov eax, " + Contenido);
                 bloqueCodigo.Add("\tpush eax");
+                if (variable != "")
+                {
+                    //bloqueCodigo.Add("\tmov dword [" + variable + "], eax");
+                }
                 match(Tipos.Numero);
             }
             else if (Clasificacion == Tipos.Identificador)
             {
                 var v = listaVariables.Find(delegate (Variable x) { return x.getNombre() == Contenido; });
-                bloqueCodigo.Add("\tmov eax, " + Contenido);
+                bloqueCodigo.Add("\tmov eax, [" + Contenido + "]");
                 bloqueCodigo.Add("\tpush eax");
+                //bloqueCodigo.Add("\tmov dword [" + "]");
+
                 match(Tipos.Identificador);
             }
             else
             {
                 match("(");
-                Expresion();
+                Expresion("");
                 match(")");
+            }
+        }
+
+        private void imprimeValores()
+        {
+            cVariables = 1;
+            asm.WriteLine(";Imprimiendo valores");
+            asm.WriteLine("\tpush space");
+            asm.WriteLine("\tcall printf");
+            asm.WriteLine("\tpush textoFinal");
+            asm.WriteLine("\tcall printf");
+            foreach (Variable v in listaVariables)
+            {
+                asm.WriteLine("\tpush nombreVariable" + cVariables++);
+                asm.WriteLine("\tcall printf");
+                //Console.WriteLine(v.getNombre() + ": " + v.getValor()); 
+                asm.WriteLine("\tmov eax, [" + v.getNombre() + "]");
+                asm.WriteLine("\tpush eax");
+                asm.WriteLine("\tpush texto");
+                asm.WriteLine("\tcall printf");
+                asm.WriteLine("\tpush space");
+                asm.WriteLine("\tcall printf");
             }
         }
     }
